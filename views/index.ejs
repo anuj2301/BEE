@@ -1,14 +1,84 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>URL Shortener</title>
-  <link rel="stylesheet" href="style.css"
-</head>
-<body>
-  <h1>URL Shortener</h1>
-  <input type="text" id="urlInput" placeholder="Enter URL">
-  <button id="shortenButton">Shorten</button>
-  <p id="shortenedUrl"></p>
-  <script src="script.js"></script>
-</body>
-</html>
+<%- include('partials/header') %>
+
+<div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+  <!-- Hero Section -->
+  <div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+      <h1 class="text-5xl md:text-6xl font-bold mb-6">
+        <span class="bg-gradient-to-r from-secondary via-accent to-secondary bg-clip-text text-transparent">
+          Shorten Your Links
+        </span>
+      </h1>
+      <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+        Transform long, messy URLs into clean, shareable links. Track clicks, manage your links, and boost your productivity.
+      </p>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="grid md:grid-cols-3 gap-6 mb-12 max-w-3xl mx-auto">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700">
+        <div class="w-12 h-12 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center mb-4 mx-auto">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">Lightning Fast</h3>
+        <p class="text-gray-600 dark:text-gray-400 text-sm">Generate short links in milliseconds</p>
+      </div>
+      
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700">
+        <div class="w-12 h-12 bg-gradient-to-r from-accent to-secondary rounded-lg flex items-center justify-center mb-4 mx-auto">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">Secure & Reliable</h3>
+        <p class="text-gray-600 dark:text-gray-400 text-sm">Your links are safe and always accessible</p>
+      </div>
+      
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700">
+        <div class="w-12 h-12 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center mb-4 mx-auto">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
+            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+          </svg>
+        </div>
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">Track & Manage</h3>
+        <p class="text-gray-600 dark:text-gray-400 text-sm">Monitor your links and organize them easily</p>
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+      <% if (!user) { %>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+            Ready to get started?
+          </h2>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/register" class="bg-gradient-to-r from-secondary to-accent hover:from-red-600 hover:to-blue-400 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
+              Get Started Free
+            </a>
+            <a href="/login" class="border-2 border-accent text-accent hover:bg-accent hover:text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200">
+              Sign In
+            </a>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            Welcome back! 👋
+          </h2>
+          <p class="text-gray-600 dark:text-gray-300">
+            Ready to create some short links?
+          </p>
+          <a href="/dashboard" class="inline-block bg-gradient-to-r from-secondary to-accent hover:from-red-600 hover:to-blue-400 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
+            Go to Dashboard
+          </a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

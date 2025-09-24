@@ -1,0 +1,283 @@
+<%- include('partials/header') %>
+
+<div class="max-w-6xl mx-auto">
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+      Dashboard
+    </h1>
+    <p class="text-gray-600 dark:text-gray-400">
+      Manage and track your shortened links
+    </p>
+  </div>
+
+  <!-- URL Shortener Form -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 dark:border-gray-700">
+    <div class="flex items-center mb-6">
+      <div class="w-10 h-10 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center mr-3">
+        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Create Short Link</h2>
+    </div>
+    
+    <form action="/shorten" method="POST" class="space-y-6">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="md:col-span-1">
+          <label for="fullUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Original URL *
+          </label>
+          <input
+            type="url"
+            id="fullUrl"
+            name="fullUrl"
+            placeholder="https://example.com/very-long-url"
+            required
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
+          />
+        </div>
+        
+        <div class="md:col-span-1">
+          <label for="custom" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Custom Alias (Optional)
+          </label>
+          <input
+            type="text"
+            id="custom"
+            name="custom"
+            placeholder="my-custom-link"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
+          />
+        </div>
+      </div>
+      
+      <button 
+        type="submit"
+        class="bg-gradient-to-r from-secondary to-accent hover:from-red-600 hover:to-blue-400 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center space-x-2"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+        <span>Shorten URL</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- URLs List -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <!-- Header -->
+    <div class="bg-gray-50 dark:bg-gray-700 px-8 py-6 border-b border-gray-200 dark:border-gray-600">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-8 h-8 bg-gradient-to-r from-accent to-secondary rounded-lg flex items-center justify-center mr-3">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200">Your Links</h3>
+        </div>
+        <span class="text-sm text-gray-500 dark:text-gray-400">
+          <% if (urls && urls.length > 0) { %>
+            <%= urls.length %> link<%= urls.length !== 1 ? 's' : '' %>
+          <% } else { %>
+            No links yet
+          <% } %>
+        </span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-8">
+      <% if (!urls || urls.length === 0) { %>
+        <div class="text-center py-12">
+          <div class="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <h4 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No links yet</h4>
+          <p class="text-gray-600 dark:text-gray-400 mb-6">
+            Create your first short link using the form above
+          </p>
+        </div>
+      <% } else { %>
+        <div class="space-y-4">
+          <% urls.forEach((url, index) => { %>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200">
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <!-- Original URL -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center mt-1">
+                      <span class="text-white text-xs font-bold"><%= index + 1 %></span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Original URL</h4>
+                      <a 
+                        href="<%= url.fullUrl %>" 
+                        target="_blank"
+                        class="text-accent hover:text-blue-400 text-sm break-all transition-colors duration-200"
+                      >
+                        <%= url.fullUrl %>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Short URL and Actions -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                  <!-- Short URL Display -->
+                  <div class="bg-white dark:bg-gray-600 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-500">
+                    <div class="flex items-center space-x-2">
+                      <span class="text-xs text-gray-500 dark:text-gray-400">Short URL:</span>
+                      <a 
+                        href="/<%= url.shortUrl %>" 
+                        target="_blank" 
+                        class="text-accent hover:text-blue-400 font-medium text-sm transition-colors duration-200"
+                      >
+                        <%= shortDomain %>/<%= url.shortUrl %>
+                      </a>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="flex items-center space-x-2">
+                    <!-- Copy Button -->
+                    <button
+                      onclick="copyToClipboard('<%= shortDomain %>/<%= url.shortUrl %>', this)"
+                      class="bg-accent hover:bg-blue-400 text-white px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:shadow-md flex items-center space-x-1"
+                      title="Copy to clipboard"
+                    >
+                      <svg class="copy-icon w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
+                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
+                      </svg>
+                      <span class="copy-text">Copy</span>
+                    </button>
+
+                    <!-- Delete Button -->
+                    <form action="/delete/<%= url._id %>" method="POST" style="display:inline" onsubmit="return confirmDelete()">
+                      <button 
+                        type="submit" 
+                        class="bg-secondary hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:shadow-md flex items-center space-x-1"
+                        title="Delete link"
+                      >
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>Delete</span>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Link Stats (if available) -->
+              <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>Created: <%= new Date(url.createdAt).toLocaleDateString() %></span>
+                  <span class="flex items-center space-x-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                      <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span><%= url.clicks || 0 %> clicks</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <!-- Pagination or Load More (if needed) -->
+        <div class="mt-8 text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Showing all <%= urls.length %> link<%= urls.length !== 1 ? 's' : '' %>
+          </p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="grid md:grid-cols-3 gap-6 mt-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+      <div class="flex items-center">
+        <div class="w-12 h-12 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            <%= totalLinks %>
+          </p>
+          <p class="text-gray-600 dark:text-gray-400 text-sm">Total Links</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+      <div class="flex items-center">
+        <div class="w-12 h-12 bg-gradient-to-r from-accent to-secondary rounded-lg flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-800 dark:text-gray-200"><%= totalClicks %></p>
+          <p class="text-gray-600 dark:text-gray-400 text-sm">Total Clicks</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+      <div class="flex items-center">
+        <div class="w-12 h-12 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-800 dark:text-gray-200"><%= clickRate %>%</p>
+          <p class="text-gray-600 dark:text-gray-400 text-sm">Avg Clicks/Link</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for interactions -->
+<script>
+  function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text).then(function() {
+      // Change button appearance temporarily
+      const icon = button.querySelector('.copy-icon');
+      const textSpan = button.querySelector('.copy-text');
+      
+      // Replace with checkmark SVG
+      icon.innerHTML = '<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>';
+      textSpan.textContent = 'Copied!';
+      button.classList.add('bg-green-500');
+      button.classList.remove('bg-accent');
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        icon.innerHTML = '<path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>';
+        textSpan.textContent = 'Copy';
+        button.classList.remove('bg-green-500');
+        button.classList.add('bg-accent');
+      }, 2000);
+    }).catch(function(err) {
+      console.error('Could not copy text: ', err);
+    });
+  }
+
+  function confirmDelete() {
+    return confirm('Are you sure you want to delete this link? This action cannot be undone.');
+  }
+</script>
+
+<%- include('partials/footer') %>

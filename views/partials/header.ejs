@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= typeof title !== 'undefined' ? title : 'URL Shortener' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#231F20',
+            secondary: '#BB4430',
+            accent: '#7EBDC2'
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    // Dark mode toggle functionality
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      localStorage.setItem('darkMode', isDark.toString());
+      updateDarkModeIcon(isDark);
+    }
+    
+    // Update dark mode icon
+    function updateDarkModeIcon(isDark) {
+      const sunIcon = document.getElementById('sunIcon');
+      const moonIcon = document.getElementById('moonIcon');
+      if (sunIcon && moonIcon) {
+        if (isDark) {
+          sunIcon.classList.remove('hidden');
+          moonIcon.classList.add('hidden');
+        } else {
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+        }
+      }
+    }
+    
+    // Initialize dark mode
+    function initDarkMode() {
+      const saved = localStorage.getItem('darkMode');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const shouldBeDark = saved === 'true' || (saved === null && prefersDark);
+      
+      if (shouldBeDark) {
+        document.documentElement.classList.add('dark');
+      }
+      
+      // Update icon when page loads
+      updateDarkModeIcon(shouldBeDark);
+    }
+    
+    // Run on page load
+    document.addEventListener('DOMContentLoaded', initDarkMode);
+    
+    // Also run immediately for faster loading
+    if (document.readyState === 'loading') {
+      initDarkMode();
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen transition-all duration-300">
+  <nav class="bg-primary dark:bg-gray-900 shadow-lg border-b-2 border-accent">
+    <div class="container mx-auto px-6">
+      <div class="flex justify-between items-center py-4">
+        <a href="/" class="flex items-center space-x-2">
+          <div class="w-8 h-8 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <span class="font-bold text-xl text-white dark:text-gray-100">LinkShort</span>
+        </a>
+        
+        <div class="flex items-center space-x-6">
+          <button 
+            onclick="toggleDarkMode()" 
+            id="darkModeToggle"
+            class="p-2 rounded-lg bg-gray-700 dark:bg-gray-600 hover:bg-gray-600 dark:hover:bg-gray-500 transition-colors duration-200"
+            title="Toggle dark mode"
+          >
+            <!-- Sun icon (shown in dark mode) -->
+            <svg id="sunIcon" class="w-5 h-5 text-yellow-400 hidden" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+            </svg>
+            <!-- Moon icon (shown in light mode) -->
+            <svg id="moonIcon" class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+          </button>
+          
+          <% if (user) { %>
+            <div class="flex items-center space-x-4">
+              <a href="/dashboard" class="text-white dark:text-gray-200 hover:text-accent transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                </svg>
+                <span>Dashboard</span>
+              </a>
+              <a href="/logout" class="bg-secondary hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-md flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
+                </svg>
+                <span>Logout</span>
+              </a>
+            </div>
+          <% } else { %>
+            <div class="flex items-center space-x-3">
+              <a href="/login" class="text-white dark:text-gray-200 hover:text-accent transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span>Login</span>
+              </a>
+              <a href="/register" class="bg-accent hover:bg-blue-400 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-md flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path>
+                </svg>
+                <span>Sign Up</span>
+              </a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <main class="container mx-auto px-6 py-8">
