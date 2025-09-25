@@ -2,19 +2,19 @@
 
 ## 📋 Table of Contents
 
-1. [Project Overview] (#project-overview)
-2. [Architecture & Design] (#architecture--design)
-3. [Database Schema] (#database-schema)
-4. [Authentication System] (#authentication-system)
-5. [URL Shortening Algorithm] (#url-shortening-algorithm)
-6. [Click Tracking System] (#click-tracking-system)
-7. [Frontend Implementation] (#frontend-implementation)
-8. [API Documentation] (#api-documentation)
-9. [Security Measures] (#security-measures)
-10. [Performance Optimization] (#performance-optimization)
-11. [Development Workflow] (#development-workflow)
-12. [Deployment Guide] (#deployment-guide)
-13. [Troubleshooting] (#troubleshooting)
+1. [Project Overview](#project-overview)
+2. [Architecture & Design](#architecture--design)
+3. [Database Schema](#database-schema)
+4. [Authentication System](#authentication-system)
+5. [URL Shortening Algorithm](#url-shortening-algorithm)
+6. [Click Tracking System](#click-tracking-system)
+7. [Frontend Implementation](#frontend-implementation)
+8. [API Documentation](#api-documentation)
+9. [Security Measures](#security-measures)
+10. [Performance Optimization](#performance-optimization)
+11. [Development Workflow](#development-workflow)
+12. [Deployment Guide](#deployment-guide)
+13. [Troubleshooting](#troubleshooting)
 
 ## 🎯 Project Overview
 
