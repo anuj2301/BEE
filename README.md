@@ -28,22 +28,26 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/anuj2301/BEE.git
    cd BEE
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `.env` file with your configuration:
+
    ```env
    MONGO_URL=mongodb://localhost:27017/linkshort
    JWT_SECRET=your-super-secret-jwt-key-here
@@ -52,6 +56,7 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
    ```
 
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -61,12 +66,12 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 
 ## 📦 Environment Variables
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `MONGO_URL` | MongoDB connection string | `mongodb://localhost:27017/linkshort` | ✅ |
-| `JWT_SECRET` | Secret key for JWT tokens | - | ✅ |
-| `PORT` | Server port | `3000` | ❌ |
-| `SHORT_DOMAIN` | Domain for short links display | `https://lnk.to` | ❌ |
+| Variable       | Description                    | Default                               | Required |
+| -------------- | ------------------------------ | ------------------------------------- | -------- |
+| `MONGO_URL`    | MongoDB connection string      | `mongodb://localhost:27017/linkshort` | ✅       |
+| `JWT_SECRET`   | Secret key for JWT tokens      | -                                     | ✅       |
+| `PORT`         | Server port                    | `3000`                                | ❌       |
+| `SHORT_DOMAIN` | Domain for short links display | `https://lnk.to`                      | ❌       |
 
 ## 🛠️ Tech Stack
 
@@ -79,7 +84,7 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 
 ## 📁 Project Structure
 
-```
+``` text
 BEE/
 ├── models/
 │   ├── user.js          # User model schema
@@ -105,6 +110,7 @@ BEE/
 ## 🎯 API Endpoints
 
 ### Authentication Routes
+
 - `GET /` - Homepage
 - `GET /login` - Login page
 - `POST /login` - Process login
@@ -113,6 +119,7 @@ BEE/
 - `GET /logout` - Logout user
 
 ### URL Management Routes
+
 - `GET /dashboard` - User dashboard with URL list
 - `POST /shorten` - Create new short URL
 - `POST /delete/:id` - Delete a URL (authenticated)
@@ -143,17 +150,20 @@ Click the moon/sun icon in the navigation to toggle between light and dark theme
 ## 📊 Features in Detail
 
 ### URL Shortening Algorithm
+
 - Generates 6-character alphanumeric codes
 - Ensures uniqueness with collision detection
 - Supports custom aliases for branded links
 
 ### Click Analytics
+
 - Real-time click tracking
 - Individual URL statistics
 - Dashboard overview with totals
 - Average clicks per link calculation
 
 ### Security Features
+
 - Password hashing with bcrypt
 - JWT token authentication
 - Input validation and sanitization
@@ -162,24 +172,15 @@ Click the moon/sun icon in the navigation to toggle between light and dark theme
 ## 🚀 Deployment
 
 ### Local Development
+
 ```bash
 npm run dev
 ```
 
 ### Production
+
 ```bash
 npm start
-```
-
-### Docker (Optional)
-```dockerfile
-FROM node:16-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
-COPY . .
-EXPOSE 3000
-CMD ["npm", "start"]
 ```
 
 ## 🤝 Contributing
@@ -208,4 +209,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️**
+### Made with ❤️
