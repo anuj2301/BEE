@@ -208,5 +208,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Inspiration from modern URL shortening services
 
 ---
-
-### Made with ❤️
+Adding in some changes 
