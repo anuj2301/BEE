@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const QRCode = require("qrcode");
 require("dotenv").config();
 
 const User = require("./models/user");
@@ -78,7 +79,7 @@ app.get("/dashboard", requireAuth, async (req, res) => {
 
 // Shorten
 app.post("/shorten", requireAuth, async (req, res) => {
-  const { fullUrl, custom } = req.body;
+  const { fullUrl, custom, validityValue, validityUnit, generateQR } = req.body;
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
   // validate fullUrl (basic)
@@ -109,7 +110,40 @@ app.post("/shorten", requireAuth, async (req, res) => {
     if (exists) return res.send('Could not generate unique short URL, try again');
   }
 
-  await Url.create({ fullUrl, shortUrl: short, user: req.user.id });
+  // Calculate expiration date based on unit
+  let expiresAt = null;
+  if (validityValue && validityValue > 0) {
+    expiresAt = new Date();
+    const value = parseInt(validityValue);
+    
+    if (validityUnit === 'minutes') {
+      expiresAt.setMinutes(expiresAt.getMinutes() + value);
+    } else if (validityUnit === 'hours') {
+      expiresAt.setHours(expiresAt.getHours() + value);
+    } else if (validityUnit === 'days') {
+      expiresAt.setDate(expiresAt.getDate() + value);
+    }
+  }
+
+  // Generate QR code if requested
+  let qrCodeDataUrl = null;
+  if (generateQR === 'on' || generateQR === true) {
+    const shortDomain = process.env.SHORT_DOMAIN || 'https://lnk.to';
+    const shortUrlFull = `${shortDomain}/${short}`;
+    try {
+      qrCodeDataUrl = await QRCode.toDataURL(shortUrlFull);
+    } catch (err) {
+      console.error('QR Code generation error:', err);
+    }
+  }
+
+  await Url.create({ 
+    fullUrl, 
+    shortUrl: short, 
+    user: req.user.id,
+    expiresAt,
+    qrCode: qrCodeDataUrl
+  });
   res.redirect('/dashboard');
 });
 
@@ -118,6 +152,22 @@ app.post('/delete/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   await Url.findOneAndDelete({ _id: id, user: req.user.id });
   res.redirect('/dashboard');
+});
+
+// Download QR Code
+app.get('/qr/download/:id', requireAuth, async (req, res) => {
+  const url = await Url.findOne({ _id: req.params.id, user: req.user.id });
+  if (!url || !url.qrCode) {
+    return res.send('QR Code not found');
+  }
+
+  // Convert base64 data URL to buffer
+  const base64Data = url.qrCode.replace(/^data:image\/png;base64,/, '');
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Content-Disposition', `attachment; filename="qr-${url.shortUrl}.png"`);
+  res.send(buffer);
 });
 
 // Auth routes
@@ -163,6 +213,12 @@ app.get("/logout", (req, res) => {
 app.get('/:short', async (req, res) => {
   const url = await Url.findOne({ shortUrl: req.params.short });
   if (!url) return res.send('URL not found');
+  
+  // Check if URL has expired
+  if (url.expiresAt && new Date() > url.expiresAt) {
+    await Url.findByIdAndDelete(url._id);
+    return res.send('This link has expired');
+  }
   
   // Increment click count
   await Url.findByIdAndUpdate(url._id, { $inc: { clicks: 1 } });
