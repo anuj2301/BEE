@@ -64,6 +64,23 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 5. **Open your browser**
    Navigate to `http://localhost:3000`
 
+## 🧪 Testing
+
+This project includes automated tests using Jest:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm test -- --coverage
+```
+
+See [__tests__/README.md](./__tests__/README.md) for detailed testing documentation.
+
 ## 📦 Environment Variables
 
 | Variable       | Description                    | Default                               | Required |
@@ -80,6 +97,7 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 - **Authentication**: JWT (JSON Web Tokens)
 - **Frontend**: EJS templating, Tailwind CSS
 - **Security**: bcryptjs for password hashing
+- **Testing**: Jest with Supertest
 - **Development**: Nodemon for hot reloading
 
 ## 📁 Project Structure
