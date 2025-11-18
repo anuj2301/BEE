@@ -31,5 +31,5 @@ Thumbs.db
 dist/
 build/
 
-# Coverage directory
+# Coverage directory 
 coverage/
