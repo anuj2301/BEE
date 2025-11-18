@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const QRCode = require("qrcode");
-require("dotenv").config();
+require("dotenv").config({quiet : true});
 
 const User = require("./models/user");
 const Url = require("./models/url");
