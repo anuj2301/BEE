@@ -79,8 +79,6 @@ npm run test:watch
 npm test -- --coverage
 ```
 
-See [__tests__/README.md](./__tests__/README.md) for detailed testing documentation.
-
 ## 📦 Environment Variables
 
 | Variable       | Description                    | Default                               | Required |
