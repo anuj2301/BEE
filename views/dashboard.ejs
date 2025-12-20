@@ -391,23 +391,68 @@
   });
 
   function copyToClipboard(text, button) {
+    // Fallback for older browsers
+    if (!navigator.clipboard) {
+      // Create temporary textarea
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        showCopySuccess(button);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        showCopyError(button);
+      }
+      
+      document.body.removeChild(textArea);
+      return;
+    }
+
     navigator.clipboard.writeText(text).then(function() {
-      // Change button appearance temporarily
-      const icon = button.querySelector('.copy-icon');
-      const textSpan = button.querySelector('.copy-text');
-      
-      // Replace with checkmark SVG
-      icon.innerHTML = '<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>';
-      textSpan.textContent = 'Copied!';
-      button.classList.add('bg-green-500');
-      button.classList.remove('bg-accent');
-      
-      // Reset after 2 seconds
+      showCopySuccess(button);
+    }).catch(function(err) {
+      console.error('Failed to copy:', err);
+      showCopyError(button);
+    });
+  }
+
+  function showCopySuccess(button) {
+    // Change button appearance temporarily
+    const icon = button.querySelector('.copy-icon');
+    const textSpan = button.querySelector('.copy-text');
+    
+    if (!icon || !textSpan) return;
+    
+    // Replace with checkmark SVG
+    icon.innerHTML = '<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>';
+    textSpan.textContent = 'Copied!';
+    button.classList.add('bg-green-500', 'dark:bg-green-600');
+    button.classList.remove('bg-accent', 'dark:bg-red-600');
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+      icon.innerHTML = '<path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>';
+      textSpan.textContent = 'Copy';
+      button.classList.remove('bg-green-500', 'dark:bg-green-600');
+      button.classList.add('bg-accent', 'dark:bg-red-600');
+    }, 2000);
+  }
+
+  function showCopyError(button) {
+    const textSpan = button.querySelector('.copy-text');
+    if (textSpan) {
+      textSpan.textContent = 'Failed!';
       setTimeout(() => {
-        icon.innerHTML = '<path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>';
         textSpan.textContent = 'Copy';
-        button.classList.remove('bg-green-500');
-        button.classList.add('bg-accent');
+      }, 2000);
+    }
+  }
       }, 2000);
     }).catch(function(err) {
       console.error('Could not copy text: ', err);

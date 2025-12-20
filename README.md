@@ -1,6 +1,6 @@
 # LinkShort - URL Shortener
 
-A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. Create short, shareable links with click tracking and user management.
+A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. Create short, shareable links with click tracking, user management, and comprehensive admin controls.
 
 ![LinkShort Dashboard](https://img.shields.io/badge/Status-Active-green)
 ![Node.js](https://img.shields.io/badge/Node.js-v14+-blue)
@@ -16,11 +16,30 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 - ⏱️ **Link Expiration**: Set expiration dates for temporary links
 - 📱 **QR Code Generation**: Generate QR codes for easy mobile sharing
 
+### Admin Panel Features
+- 👑 **Admin Dashboard**: Comprehensive admin panel for managing users and links
+- 📈 **Statistics Overview**: Total users, links, and clicks at a glance
+- 👥 **User Management**: View all users, their links, and activity
+- 🔍 **Advanced Search**: Filter users by email in real-time
+- 📋 **Detailed User Profiles**: Click on any user to see their complete profile
+- 🚫 **User Blacklisting**: Suspend suspicious accounts without deletion
+- 🗑️ **Content Moderation**: Delete users or individual links if needed
+- 🔀 **Link Sorting**: Sort links by date or clicks (ascending/descending)
+- 🔒 **Access Control**: Role-based permissions (Admin vs Regular User)
+
+### User Profile Features
+- 👤 **Personal Profile Page**: View your own statistics and all your links
+- 📊 **Profile Analytics**: See total links created and total clicks received
+- 🕐 **Link History**: Complete history with creation dates and times
+- 🎨 **Consistent Design**: Same beautiful UI as admin panel
+
 ### UI/UX Features
 - 🎨 **Modern UI**: Beautiful, responsive design with Tailwind CSS
 - 🌓 **Dark/Light Mode**: Theme toggle with localStorage persistence
 - 📱 **Mobile Friendly**: Fully responsive across all devices
 - 🎭 **SVG Icons**: Professional iconography throughout
+- ✨ **Custom Modals**: Beautiful confirmation dialogs (no more ugly browser alerts!)
+- 🎯 **Visual Feedback**: Color-coded status badges and action buttons
 
 ### Performance & Caching
 - 🚀 **Redis Caching**: Server-side caching for improved performance
@@ -30,6 +49,7 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 ### Security & Production
 - 🔒 **HTTPS/SSL Support**: Secure connections with multiple certificate options
 - 🔐 **Secure Authentication**: JWT tokens and bcrypt password hashing
+- 🛡️ **User Blacklisting**: Prevent blacklisted users from logging in
 - ☁️ **AWS Ready**: Pre-configured for Elastic Beanstalk deployment
 - 🧪 **Tested**: Unit tests, integration tests, and browser automation
 
@@ -88,7 +108,27 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
    npm run dev
    ```
 
-5. **Open your browser**
+5. **Create an Admin User**
+
+   After registering a regular user, promote them to admin:
+
+   ```bash
+   node make-admin.js user@example.com
+   ```
+
+   Or using MongoDB shell:
+
+   ```bash
+   mongosh linkshort
+   db.users.updateOne(
+     { email: "user@example.com" },
+     { $set: { isAdmin: true } }
+   )
+   ```
+
+   See [ADMIN_SETUP.md](ADMIN_SETUP.md) for detailed admin configuration.
+
+6. **Open your browser**
    Navigate to `http://localhost:3000`
 
 ## 🧪 Testing
@@ -194,11 +234,13 @@ BEE/
 ├── server.js                   # Main application file
 ├── redis-client.js             # Redis cache helper
 ├── generate-certs.js           # SSL certificate generator
+├── make-admin.js               # Admin user creation script
 ├── playwright.config.js        # Playwright configuration
 ├── package.json                # Dependencies and scripts
 ├── .env.example                # Environment variables template
 ├── AWS_DEPLOYMENT_GUIDE.md     # AWS deployment instructions
 ├── SSL_SETUP_GUIDE.md          # SSL/HTTPS setup guide
+├── ADMIN_SETUP.md              # Admin panel setup guide
 └── README.md                   # Project documentation
 ```
 
@@ -208,14 +250,27 @@ BEE/
 
 - `GET /` - Homepage
 - `GET /login` - Login page
-- `POST /login` - Process login
+- `POST /login` - Process login (checks blacklist status)
 - `GET /register` - Registration page
 - `POST /register` - Process registration
 - `GET /logout` - Logout user
 
-### URL Management Routes
+### User Routes
 
 - `GET /dashboard` - User dashboard with URL list (Redis cached)
+- `GET /profile` - View own profile (statistics and links)
+
+### Admin Routes (Requires Admin Role)
+
+- `GET /admin` - Admin panel (view all users and links)
+- `GET /admin/user/:id` - View detailed user profile
+- `POST /admin/delete-user/:id` - Delete a user
+- `POST /admin/blacklist-user/:id` - Blacklist a user
+- `POST /admin/unblacklist-user/:id` - Remove user from blacklist
+- `POST /admin/delete-url/:id` - Delete a URL
+
+### URL Management Routes
+
 - `POST /shorten` - Create new short URL
 - `POST /delete/:id` - Delete a URL (authenticated)
 - `GET /:shortCode` - Redirect to original URL (Redis cached, increments clicks)
@@ -224,7 +279,9 @@ BEE/
 
 ## 🔧 Usage
 
-### Creating Short URLs
+### For Regular Users
+
+#### Creating Short URLs
 
 1. **Register/Login** to your account
 2. **Navigate** to the dashboard
@@ -232,6 +289,38 @@ BEE/
 4. **Optional**: Add a custom alias
 5. **Click** "Shorten URL"
 6. **Copy** and share your new short link!
+
+#### Viewing Your Profile
+
+1. Click **Profile** in the header
+2. View your **total links** and **total clicks**
+3. See all your links with click counts
+4. Click on any link to copy it
+
+### For Admins
+
+#### Accessing Admin Panel
+
+1. Login with an admin account
+2. Click **Admin** in the header
+3. View system-wide statistics
+
+#### Managing Users
+
+1. Use the **search box** to filter users by email
+2. Click on any user row to view their detailed profile
+3. In user detail page:
+   - **Blacklist/Unblacklist** users (prevents login)
+   - **Delete** users (removes all their data)
+   - View user's links and activity
+
+#### Managing Links
+
+1. In the admin panel, scroll to the **All Links** section
+2. Use the **Sort By** dropdown to organize links:
+   - Date Created (Ascending/Descending)
+   - Clicks (Ascending/Descending)
+3. Click **Delete** to remove suspicious or unwanted links
 
 ### Tracking Clicks
 
