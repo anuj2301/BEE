@@ -8,14 +8,30 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 
 ## ✨ Features
 
+### Core Features
 - 🔗 **URL Shortening**: Convert long URLs into short, memorable links
-- 👤 **User Authentication**: Secure registration and login system
+- 👤 **User Authentication**: Secure registration and login system with JWT
 - 📊 **Click Tracking**: Monitor how many times your links are clicked
-- 🎨 **Modern UI**: Beautiful, responsive design with dark/light mode
-- 📱 **Mobile Friendly**: Fully responsive across all devices
-- 🔒 **Secure**: JWT-based authentication and input validation
-- ⚡ **Fast**: Optimized for performance with MongoDB indexing
 - 🎯 **Custom Aliases**: Create custom short codes for your URLs
+- ⏱️ **Link Expiration**: Set expiration dates for temporary links
+- 📱 **QR Code Generation**: Generate QR codes for easy mobile sharing
+
+### UI/UX Features
+- 🎨 **Modern UI**: Beautiful, responsive design with Tailwind CSS
+- 🌓 **Dark/Light Mode**: Theme toggle with localStorage persistence
+- 📱 **Mobile Friendly**: Fully responsive across all devices
+- 🎭 **SVG Icons**: Professional iconography throughout
+
+### Performance & Caching
+- 🚀 **Redis Caching**: Server-side caching for improved performance
+- 💾 **Browser Caching**: Client-side localStorage for faster loading
+- ⚡ **Optimized**: MongoDB indexing and efficient queries
+
+### Security & Production
+- 🔒 **HTTPS/SSL Support**: Secure connections with multiple certificate options
+- 🔐 **Secure Authentication**: JWT tokens and bcrypt password hashing
+- ☁️ **AWS Ready**: Pre-configured for Elastic Beanstalk deployment
+- 🧪 **Tested**: Unit tests, integration tests, and browser automation
 
 ## 🚀 Quick Start
 
@@ -53,6 +69,17 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
    JWT_SECRET=your-super-secret-jwt-key-here
    PORT=3000
    SHORT_DOMAIN=https://lnk.to
+   
+   # Redis (optional but recommended)
+   REDIS_HOST=localhost
+   REDIS_PORT=6379
+   ENABLE_REDIS=true
+   
+   # HTTPS (optional for local dev)
+   ENABLE_HTTPS=false
+   HTTPS_PORT=3443
+   HTTPS_CERT_PATH=./certs/localhost.pem
+   HTTPS_KEY_PATH=./certs/localhost-key.pem
    ```
 
 4. **Start the development server**
@@ -66,7 +93,9 @@ A modern, full-featured URL shortener built with Node.js, Express, and MongoDB. 
 
 ## 🧪 Testing
 
-This project includes automated tests using Jest:
+This project includes comprehensive testing:
+
+### Unit & Integration Tests (Jest)
 
 ```bash
 # Run all tests
@@ -74,29 +103,63 @@ npm test
 
 # Run tests in watch mode
 npm run test:watch
-
-# Run tests with coverage report
-npm test -- --coverage
 ```
+
+### Browser Integration Tests (Playwright)
+
+```bash
+# Install Playwright browsers (first time only)
+npx playwright install
+
+# Run integration tests
+npm run test:integration
+
+# Run with UI mode
+npm run test:integration:ui
+```
+
+See [TESTING.md](./TESTING.md) for detailed testing documentation.
 
 ## 📦 Environment Variables
 
-| Variable       | Description                    | Default                               | Required |
-| -------------- | ------------------------------ | ------------------------------------- | -------- |
-| `MONGO_URL`    | MongoDB connection string      | `mongodb://localhost:27017/linkshort` | ✅       |
-| `JWT_SECRET`   | Secret key for JWT tokens      | -                                     | ✅       |
-| `PORT`         | Server port                    | `3000`                                | ❌       |
-| `SHORT_DOMAIN` | Domain for short links display | `https://lnk.to`                      | ❌       |
+| Variable            | Description                    | Default                               | Required |
+| ------------------- | ------------------------------ | ------------------------------------- | -------- |
+| `MONGO_URL`         | MongoDB connection string      | `mongodb://localhost:27017/linkshort` | ✅       |
+| `JWT_SECRET`        | Secret key for JWT tokens      | -                                     | ✅       |
+| `PORT`              | Server port                    | `3000`                                | ❌       |
+| `SHORT_DOMAIN`      | Domain for short links display | `https://lnk.to`                      | ❌       |
+| `REDIS_HOST`        | Redis server host              | `localhost`                           | ❌       |
+| `REDIS_PORT`        | Redis server port              | `6379`                                | ❌       |
+| `ENABLE_REDIS`      | Enable Redis caching           | `true`                                | ❌       |
+| `ENABLE_HTTPS`      | Enable HTTPS server            | `false`                               | ❌       |
+| `HTTPS_PORT`        | HTTPS server port              | `3443`                                | ❌       |
+| `HTTPS_CERT_PATH`   | Path to SSL certificate        | `./certs/localhost.pem`               | ❌       |
+| `HTTPS_KEY_PATH`    | Path to SSL private key        | `./certs/localhost-key.pem`           | ❌       |
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Node.js, Express.js
+### Backend
+- **Framework**: Node.js, Express.js
 - **Database**: MongoDB with Mongoose ODM
+- **Caching**: Redis with ioredis client
 - **Authentication**: JWT (JSON Web Tokens)
-- **Frontend**: EJS templating, Tailwind CSS
-- **Security**: bcryptjs for password hashing
-- **Testing**: Jest with Supertest
+- **Security**: bcryptjs for password hashing, HTTPS/SSL support
+
+### Frontend
+- **Templating**: EJS (Embedded JavaScript)
+- **Styling**: Tailwind CSS v3.0+
+- **Icons**: SVG icons (Heroicons)
+- **Caching**: localStorage for client-side caching
+
+### Testing
+- **Unit Tests**: Jest with Supertest
+- **Integration Tests**: Playwright for browser automation
+- **Coverage**: Built-in code coverage reporting
+
+### DevOps
 - **Development**: Nodemon for hot reloading
+- **Deployment**: AWS Elastic Beanstalk ready
+- **SSL**: Multiple options (self-signed, Let's Encrypt, ACM)
 
 ## 📁 Project Structure
 
@@ -115,12 +178,28 @@ BEE/
 │   ├── dashboard.ejs    # User dashboard
 │   └── layout.ejs       # Base layout (unused)
 ├── public/
-│   ├── css/            # Custom stylesheets
-│   └── js/             # Client-side JavaScript
-├── server.js           # Main application file
-├── package.json        # Dependencies and scripts
-├── .env.example        # Environment variables template
-└── README.md          # Project documentation
+│   ├── css/                    # Custom stylesheets
+│   └── js/                     # Client-side JavaScript
+├── __tests__/                  # Test files
+│   ├── models.test.js          # Model tests
+│   ├── auth.test.js            # Auth tests
+│   ├── utils.test.js           # Utility tests
+│   └── integration.test.js     # Integration tests
+├── e2e/                        # End-to-end tests
+│   └── app.spec.js             # Playwright browser tests
+├── .ebextensions/              # AWS EB configuration
+│   ├── nodecommand.config      # Node.js settings
+│   └── redis.config            # Redis setup
+├── certs/                      # SSL certificates (gitignored)
+├── server.js                   # Main application file
+├── redis-client.js             # Redis cache helper
+├── generate-certs.js           # SSL certificate generator
+├── playwright.config.js        # Playwright configuration
+├── package.json                # Dependencies and scripts
+├── .env.example                # Environment variables template
+├── AWS_DEPLOYMENT_GUIDE.md     # AWS deployment instructions
+├── SSL_SETUP_GUIDE.md          # SSL/HTTPS setup guide
+└── README.md                   # Project documentation
 ```
 
 ## 🎯 API Endpoints
@@ -136,10 +215,12 @@ BEE/
 
 ### URL Management Routes
 
-- `GET /dashboard` - User dashboard with URL list
+- `GET /dashboard` - User dashboard with URL list (Redis cached)
 - `POST /shorten` - Create new short URL
 - `POST /delete/:id` - Delete a URL (authenticated)
-- `GET /:shortCode` - Redirect to original URL (increments clicks)
+- `GET /:shortCode` - Redirect to original URL (Redis cached, increments clicks)
+- `GET /qr/download/:id` - Download QR code for URL
+- `GET /api/redis-status` - Check Redis cache status (authenticated)
 
 ## 🔧 Usage
 
@@ -193,10 +274,68 @@ Click the moon/sun icon in the navigation to toggle between light and dark theme
 npm run dev
 ```
 
-### Production
+### Production Build
 
 ```bash
 npm start
+```
+
+### AWS Elastic Beanstalk Deployment
+
+Complete guide available in [AWS_DEPLOYMENT_GUIDE.md](./AWS_DEPLOYMENT_GUIDE.md)
+
+Quick start:
+```bash
+# Install EB CLI
+pip install awsebcli
+
+# Initialize and deploy
+eb init
+eb create linksnap-prod
+eb deploy
+```
+
+### SSL/HTTPS Setup
+
+Multiple options available - see [SSL_SETUP_GUIDE.md](./SSL_SETUP_GUIDE.md):
+
+- **Local Development**: mkcert or self-signed certificates
+- **Production VPS**: Let's Encrypt with Certbot
+- **AWS**: Certificate Manager (ACM)
+- **Simple**: Cloudflare SSL proxy
+
+Quick local HTTPS:
+```bash
+node generate-certs.js
+# Update .env: ENABLE_HTTPS=true
+npm start
+```
+
+### Redis Setup
+
+**Local (Windows)**:
+```powershell
+# Download Redis from https://github.com/microsoftarchive/redis/releases
+# Or use Docker:
+docker run -d -p 6379:6379 redis:alpine
+```
+
+**Linux/Mac**:
+```bash
+# Ubuntu/Debian
+sudo apt install redis-server
+sudo systemctl start redis
+
+# Mac
+brew install redis
+brew services start redis
+```
+
+Update `.env`:
+```env
+ENABLE_REDIS=true
+REDIS_HOST=localhost
+REDIS_PORT=6379
 ```
 
 ## 🤝 Contributing

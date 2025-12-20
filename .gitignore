@@ -31,5 +31,35 @@ Thumbs.db
 dist/
 build/
 
+# SSL Certificates (IMPORTANT: Never commit certificates!)
+certs/
+*.pem
+*.key
+*.crt
+*.csr
+
+# Test results
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# AWS Elastic Beanstalk
+.elasticbeanstalk/
+.ebextensions-dev/
+*.zip
+
+# Redis dumps
+dump.rdb
+appendonly.aof
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+dist/
+build/
+
 # Coverage directory 
 coverage/

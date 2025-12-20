@@ -1,1243 +1,1728 @@
-# LinkShort Project Documentation
+# LinkShort - Complete Project Documentation
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Project Overview](#project-overview)
 2. [Architecture & Design](#architecture--design)
-3. [Database Schema](#database-schema)
-4. [Authentication System](#authentication-system)
-5. [URL Shortening Algorithm](#url-shortening-algorithm)
-6. [Click Tracking System](#click-tracking-system)
-7. [Frontend Implementation](#frontend-implementation)
-8. [API Documentation](#api-documentation)
-9. [Security Measures](#security-measures)
-10. [Performance Optimization](#performance-optimization)
-11. [Development Workflow](#development-workflow)
-12. [Deployment Guide](#deployment-guide)
-13. [Troubleshooting](#troubleshooting)
+3. [Technology Stack](#technology-stack)
+4. [Project Structure](#project-structure)
+5. [Core Features](#core-features)
+6. [Database Models](#database-models)
+7. [API Endpoints](#api-endpoints)
+8. [Application Workflow](#application-workflow)
+9. [Caching Strategy](#caching-strategy)
+10. [Security](#security)
+11. [Testing](#testing)
+12. [Environment Configuration](#environment-configuration)
+13. [Development Setup](#development-setup)
+14. [Deployment](#deployment)
+15. [Troubleshooting](#troubleshooting)
 
-## 🎯 Project Overview
+---
 
-LinkShort is a modern URL shortening service built with the MEAN stack (MongoDB, Express.js, Angular/EJS, Node.js). It provides users with the ability to create short, trackable links while maintaining detailed analytics and user management.
+## Project Overview
 
-### Core Objectives
+**LinkShort** is a production-ready URL shortener application built with Node.js, Express, and MongoDB. It provides a complete solution for creating, managing, and tracking shortened URLs with enterprise-grade features including user authentication, Redis caching, QR code generation, and comprehensive analytics.
 
-- **Simplicity**: Easy-to-use interface for creating short links
-- **Security**: Robust authentication and data protection
-- **Analytics**: Comprehensive click tracking and statistics
-- **Scalability**: Designed to handle high traffic loads
-- **User Experience**: Modern, responsive design with dark/light themes
+### Key Capabilities
 
-### Target Audience
+- **URL Shortening**: Generate short, memorable links from long URLs
+- **Custom Aliases**: Allow users to create branded short links
+- **Link Expiration**: Set time-based expiration for temporary links
+- **Click Tracking**: Real-time analytics for link performance
+- **QR Codes**: Automatic QR code generation for mobile sharing
+- **User Management**: Secure authentication and authorization
+- **Caching**: Redis-powered caching for high performance
+- **HTTPS Support**: SSL/TLS encryption for secure connections
 
-- Digital marketers tracking campaign performance
-- Social media managers sharing links
-- Businesses creating branded short links
-- Developers needing programmatic URL shortening
-- General users wanting cleaner, shareable links
+---
 
-## 🏗️ Architecture & Design
+## Architecture & Design
 
-### System Architecture
+### High-Level Architecture
 
-``` text
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Client Side   │    │   Server Side   │    │    Database     │
-│                 │    │                 │    │                 │
-│ • EJS Templates │◄──►│ • Express.js    │◄──►│ • MongoDB       │
-│ • Tailwind CSS  │    │ • Node.js       │    │ • Mongoose ODM  │
-│ • JavaScript    │    │ • JWT Auth      │    │ • Collections   │
-│ • SVG Icons     │    │ • bcrypt        │    │   - Users       │
-│                 │    │ • Cookie Parser │    │   - URLs        │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+┌─────────────┐      HTTPS/HTTP      ┌──────────────┐
+│   Browser   │ ◄──────────────────► │   Express    │
+│   Client    │                      │   Server     │
+└─────────────┘                      └──────┬───────┘
+                                            │
+                    ┌───────────────────────┼───────────────────────┐
+                    │                       │                       │
+              ┌─────▼─────┐          ┌─────▼─────┐          ┌─────▼─────┐
+              │  MongoDB  │          │   Redis   │          │   JWT     │
+              │  Database │          │   Cache   │          │   Auth    │
+              └───────────┘          └───────────┘          └───────────┘
 ```
 
-### MVC Pattern Implementation
+### Request Flow
 
-**Models (`/models/`)**
+1. **Client Request** → Browser sends HTTP/HTTPS request
+2. **Authentication Middleware** → Validates JWT token from cookies
+3. **Route Handler** → Processes request based on endpoint
+4. **Cache Layer** → Checks Redis cache for frequently accessed data
+5. **Database Layer** → Queries MongoDB if cache miss
+6. **Response** → Returns data to client (HTML/JSON/Redirect)
 
-- `user.js`: User data structure and validation
-- `url.js`: URL schema with click tracking
+### Design Patterns
 
-**Views (`/views/`)**
+- **MVC Pattern**: Separation of Models, Views, and Controllers
+- **Middleware Pattern**: Reusable authentication and error handling
+- **Repository Pattern**: Database abstraction through Mongoose models
+- **Factory Pattern**: Dynamic URL generation with uniqueness checks
+- **Cache-Aside Pattern**: Redis caching with database fallback
 
-- `index.ejs`: Landing page with features
-- `dashboard.ejs`: User dashboard with URL management
-- `login.ejs` & `register.ejs`: Authentication pages
-- `partials/`: Reusable header and footer components
+---
 
-**Controller (`server.js`)**
+## Technology Stack
 
-- Route handling and business logic
-- Authentication middleware
-- Database operations
+### Backend Technologies
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Node.js | v14+ | Runtime environment |
+| Express.js | ^4.18.2 | Web framework |
+| MongoDB | - | Primary database |
+| Mongoose | ^7.6.3 | MongoDB ODM |
+| Redis | - | Caching layer |
+| ioredis | ^5.8.2 | Redis client |
+
+### Authentication & Security
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| JWT | ^9.0.2 | Token-based authentication |
+| bcryptjs | ^2.4.3 | Password hashing |
+| cookie-parser | ^1.4.7 | Cookie handling |
+| node-forge | ^1.3.1 | SSL certificate generation |
+
+### Frontend Technologies
+
+| Technology | Purpose |
+|------------|---------|
+| EJS | Server-side templating |
+| Tailwind CSS | Utility-first CSS framework |
+| Vanilla JavaScript | Client-side interactions |
+| localStorage | Client-side caching |
+
+### Testing & Quality
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Jest | ^29.7.0 | Unit testing framework |
+| Playwright | ^1.56.1 | E2E browser testing |
+| Supertest | ^6.3.4 | HTTP assertion library |
+
+### Development Tools
+
+| Tool | Purpose |
+|------|---------|
+| Nodemon | Auto-restart on file changes |
+| dotenv | Environment variable management |
+| ESLint | Code linting (optional) |
+
+---
+
+## Project Structure
+
+```
+BEE/
+├── 📁 models/                    # Database models
+│   ├── user.js                   # User schema and model
+│   └── url.js                    # URL schema and model
+│
+├── 📁 views/                     # EJS templates
+│   ├── 📁 partials/              # Reusable template components
+│   │   ├── header.ejs            # Header with navigation and dark mode
+│   │   └── footer.ejs            # Footer component
+│   ├── index.ejs                 # Homepage/landing page
+│   ├── login.ejs                 # User login page
+│   ├── register.ejs              # User registration page
+│   ├── dashboard.ejs             # User dashboard with URL management
+│   └── layout.ejs                # Base layout template
+│
+├── 📁 public/                    # Static assets
+│   ├── 📁 css/                   # Custom stylesheets (empty - using CDN)
+│   └── 📁 js/                    # Client-side JavaScript (empty)
+│
+├── 📁 __tests__/                 # Unit and integration tests
+│   ├── auth.test.js              # Authentication tests
+│   ├── models.test.js            # Database model tests
+│   ├── utils.test.js             # Utility function tests
+│   ├── integration.test.js       # Integration tests
+│   └── setup.js                  # Test environment configuration
+│
+├── 📁 e2e/                       # End-to-end tests
+│   └── app.spec.js               # Playwright browser tests
+│
+├── 📁 certs/                     # SSL certificates (gitignored)
+│   ├── localhost.pem             # Self-signed certificate
+│   └── localhost-key.pem         # Private key
+│
+├── 📁 coverage/                  # Test coverage reports
+│   ├── lcov-report/              # HTML coverage report
+│   └── coverage-final.json       # JSON coverage data
+│
+├── 📁 utils/                     # Utility functions (empty)
+│
+├── 📄 server.js                  # Main application entry point
+├── 📄 redis-client.js            # Redis cache configuration
+├── 📄 generate-certs.js          # SSL certificate generator
+├── 📄 playwright.config.js       # Playwright test configuration
+├── 📄 package.json               # Dependencies and scripts
+├── 📄 README.md                  # Project readme
+├── 📄 todo.txt                   # Development todo list
+└── 📄 .env                       # Environment variables (gitignored)
+```
+
+### File Descriptions
+
+#### Root Files
+
+##### `server.js` (378 lines)
+**Purpose**: Main application file containing all routes, middleware, and server configuration.
+
+**Key Responsibilities**:
+- Express app initialization and configuration
+- Database connection (MongoDB)
+- Redis cache integration with graceful fallback
+- Authentication middleware (JWT verification)
+- Route definitions (all application routes)
+- URL shortening logic with collision detection
+- HTTPS/HTTP server setup with conditional switching
+- Click tracking and analytics
+- QR code generation
+
+**Key Functions**:
+- `authMiddleware(req, res, next)`: Verifies JWT token from cookies
+- `requireAuth(req, res, next)`: Protects routes requiring authentication
+- `generateCode()`: Creates random 6-character short codes
+- Server startup with HTTPS/HTTP selection
+
+##### `redis-client.js` (137 lines)
+**Purpose**: Redis client configuration and cache helper functions.
+
+**Key Features**:
+- Redis connection with retry strategy
+- Cache helper functions for common operations
+- Error handling and graceful degradation
+- TTL (Time-To-Live) management
+
+**Cache Functions**:
+- `getUrl(shortUrl)`: Retrieve cached URL data
+- `setUrl(shortUrl, urlData, ttl)`: Cache URL data (default 1 hour)
+- `deleteUrl(shortUrl)`: Remove URL from cache
+- `incrementClicks(shortUrl)`: Atomic click counter increment
+- `getClicks(shortUrl)`: Retrieve click count
+- `setUserUrls(userId, urls)`: Cache user's URL list (5 minutes)
+- `getUserUrls(userId)`: Retrieve cached user URLs
+- `invalidateUserUrls(userId)`: Clear user URL cache
+- `getKeys(pattern)`: Debug function to list keys
+- `flushAll()`: Clear entire cache
+
+##### `generate-certs.js` (114 lines)
+**Purpose**: Generate self-signed SSL certificates for local HTTPS development.
+
+**Features**:
+- Uses `node-forge` library (no OpenSSL dependency)
+- Generates RSA 2048-bit key pairs
+- Creates certificates valid for 1 year
+- Includes Subject Alternative Names (SANs) for localhost
+- Outputs to `certs/` directory
+- Instructions for enabling HTTPS in `.env`
+
+**Usage**:
+```bash
+node generate-certs.js
+```
+
+##### `playwright.config.js` (32 lines)
+**Purpose**: Configuration for Playwright end-to-end browser testing.
+
+**Configuration**:
+- Test directory: `./e2e`
+- Base URL: `http://localhost:3000`
+- Browsers: Chromium, Firefox, WebKit
+- Auto-start server for testing
+- Screenshot on failure
+- Trace on first retry
+
+##### `package.json` (55 lines)
+**Purpose**: Project metadata, dependencies, and npm scripts.
+
+**Key Scripts**:
+- `npm start`: Start production server
+- `npm run dev`: Start with nodemon (hot reload)
+- `npm test`: Run Jest unit tests with coverage
+- `npm run test:watch`: Watch mode for tests
+- `npm run test:integration`: Run Playwright E2E tests
+- `npm run test:integration:ui`: Playwright UI mode
+
+**Dependencies**: 14 production, 5 development
+
+#### Models Directory
+
+##### `models/user.js` (8 lines)
+**Purpose**: Mongoose schema for user data.
+
+**Schema Fields**:
+```javascript
+{
+  name: String,              // User's full name
+  email: String (unique),    // Email address (login identifier)
+  password: String           // Bcrypt hashed password
+}
+```
+
+**Features**:
+- Unique email constraint
+- No timestamps (can be added if needed)
+
+##### `models/url.js` (14 lines)
+**Purpose**: Mongoose schema for shortened URLs.
+
+**Schema Fields**:
+```javascript
+{
+  fullUrl: String,           // Original long URL
+  shortUrl: String (unique), // Short code (6 chars)
+  user: ObjectId,            // Reference to User model
+  clicks: Number,            // Click counter (default: 0)
+  createdAt: Date,           // Creation timestamp (auto)
+  expiresAt: Date,           // Optional expiration date
+  isExpired: Boolean,        // Expiration flag (default: false)
+  qrCode: String             // Base64 encoded QR code image
+}
+```
+
+**Features**:
+- Unique short URL constraint
+- TTL index for automatic deletion of expired URLs
+- Reference to user who created the link
+- QR code storage as data URL
+
+**Indexes**:
+- `{ expiresAt: 1 }` with `expireAfterSeconds: 0` (sparse)
+
+#### Views Directory
+
+##### `views/index.ejs` (84 lines)
+**Purpose**: Landing page/homepage.
+
+**Features**:
+- Hero section with gradient text
+- Feature cards (Lightning Fast, Secure & Reliable, Track & Manage)
+- SVG icons for visual appeal
+- Call-to-action buttons
+- Responsive grid layout
+- Dark mode support
+
+##### `views/login.ejs` (84 lines)
+**Purpose**: User login page.
+
+**Features**:
+- Email and password input fields
+- Error message display
+- Link to registration page
+- "Remember me" functionality
+- Responsive card design
+- Dark mode support
+
+##### `views/register.ejs` (similar structure)
+**Purpose**: User registration page.
+
+**Features**:
+- Name, email, and password fields
+- Email validation
 - Error handling
+- Link to login page
+- Terms acceptance (optional)
 
-### Technology Stack Details
+##### `views/dashboard.ejs` (425 lines)
+**Purpose**: Main user dashboard for URL management.
 
-| Layer              | Technology   | Purpose                       | Version |
-| ------------------ | ------------ | ----------------------------- | ------- |
-| **Runtime**        | Node.js      | Server-side JavaScript        | v14+    |
-| **Framework**      | Express.js   | Web application framework     | Latest  |
-| **Database**       | MongoDB      | NoSQL document database       | v4.4+   |
-| **ODM**            | Mongoose     | MongoDB object modeling       | Latest  |
-| **Authentication** | JWT          | Token-based authentication    | Latest  |
-| **Password**       | bcryptjs     | Password hashing              | Latest  |
-| **Templating**     | EJS          | Embedded JavaScript templates | Latest  |
-| **Styling**        | Tailwind CSS | Utility-first CSS framework   | v3.0+   |
-| **Icons**          | Heroicons    | SVG icon library              | Latest  |
+**Features**:
+- URL shortening form with:
+  - Full URL input
+  - Custom alias option
+  - Expiration settings (minutes/hours/days)
+  - QR code generation toggle
+- Statistics cards:
+  - Total links
+  - Total clicks
+  - Click rate
+- URL list table with:
+  - Short URL display
+  - Full URL
+  - Click count
+  - Creation date
+  - Expiration status
+  - QR code download
+  - Copy to clipboard
+  - Delete action
+- Real-time Redis status indicator
+- Dark mode toggle
+- Responsive layout
 
-## 🗄️ Database Schema
+##### `views/partials/header.ejs` (152 lines)
+**Purpose**: Reusable header component with navigation.
 
-### User Collection
+**Features**:
+- Logo/brand name
+- Navigation menu:
+  - Home
+  - Dashboard (authenticated only)
+  - Login/Register (unauthenticated)
+  - Logout (authenticated)
+- Dark mode toggle button
+- Responsive hamburger menu (mobile)
+- Tailwind CSS configuration in `<head>`
+- Dark mode persistence via localStorage
+- User greeting display
 
+##### `views/partials/footer.ejs`
+**Purpose**: Reusable footer component.
+
+**Features**:
+- Copyright information
+- Links (About, Privacy, Terms)
+- Social media icons (optional)
+
+#### Tests Directory
+
+##### `__tests__/auth.test.js` (100 lines)
+**Purpose**: Unit tests for authentication utilities.
+
+**Test Suites**:
+1. **Password Hashing**:
+   - Hash generation
+   - Password comparison (correct)
+   - Password comparison (incorrect)
+
+2. **JWT Token Operations**:
+   - Token creation
+   - Token verification
+   - Invalid token rejection
+   - Wrong secret rejection
+
+##### `__tests__/models.test.js`
+**Purpose**: Tests for database models.
+
+**Tests**:
+- User model validation
+- URL model validation
+- Schema constraints
+- Default values
+
+##### `__tests__/integration.test.js`
+**Purpose**: Integration tests for API endpoints.
+
+**Tests**:
+- User registration flow
+- Login flow
+- URL creation
+- URL redirection
+- Click tracking
+
+##### `__tests__/setup.js` (8 lines)
+**Purpose**: Jest test environment configuration.
+
+**Configuration**:
+- Sets `NODE_ENV=test`
+- Defines test JWT secret
+- Sets test MongoDB URL
+- Configures Jest timeout (10s)
+
+##### `e2e/app.spec.js` (276 lines)
+**Purpose**: Playwright end-to-end browser tests.
+
+**Test Cases**:
+- Homepage load
+- Navigation to login/register
+- Form validation
+- User registration flow
+- Login flow
+- URL shortening
+- Dashboard interactions
+- Dark mode toggle
+- QR code generation
+- URL deletion
+
+---
+
+## Core Features
+
+### 1. URL Shortening Engine
+
+**Algorithm**:
+1. Validate input URL
+2. Check for custom alias or generate random 6-char code
+3. Verify uniqueness (up to 5 attempts)
+4. Calculate expiration if specified
+5. Generate QR code if requested
+6. Store in MongoDB
+7. Cache in Redis
+8. Return short URL to user
+
+**Character Set**: `A-Z, a-z, 0-9` (62 characters)
+**Code Length**: 6 characters
+**Total Possible Combinations**: 62^6 = 56,800,235,584
+
+**Collision Handling**: Regenerate up to 5 times if duplicate found
+
+### 2. User Authentication
+
+**Registration Flow**:
+1. User submits name, email, password
+2. Check if email exists
+3. Hash password with bcrypt (salt rounds: 10)
+4. Store user in database
+5. Redirect to login
+
+**Login Flow**:
+1. User submits email, password
+2. Find user by email
+3. Compare password with bcrypt
+4. Generate JWT token (expires in 1 hour)
+5. Set HTTP-only cookie
+6. Redirect to dashboard
+
+**JWT Payload**:
 ```javascript
-const UserSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      maxLength: 50,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      validate: [validator.isEmail, "Invalid email"],
-    },
-    password: {
-      type: String,
-      required: true,
-      minLength: 6,
-    },
-  },
-  {
-    timestamps: true, // Adds createdAt and updatedAt
-  }
-);
+{
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  iat: timestamp,
+  exp: timestamp + 3600
+}
 ```
 
-### URL Collection
+### 3. Click Tracking
 
-```javascript
-const UrlSchema = new mongoose.Schema({
-  fullUrl: {
-    type: String,
-    required: true,
-    validate: [validator.isURL, "Invalid URL"],
-  },
-  shortUrl: {
-    type: String,
-    required: true,
-    unique: true,
-    index: true, // For fast lookups
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-    index: true, // For user-specific queries
-  },
-  clicks: {
-    type: Number,
-    default: 0,
-    min: 0,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-```
+**Tracking Mechanism**:
+1. User clicks short link
+2. Check cache for URL data
+3. Fallback to database if cache miss
+4. Verify expiration status
+5. Increment click counter in DB (`$inc`)
+6. Increment counter in Redis (atomic)
+7. Invalidate cache entry (force refresh)
+8. Redirect to original URL
 
-### Database Indexes
+**Analytics Data**:
+- Total clicks per URL
+- Total clicks across all URLs
+- Average click rate
+- Click timestamps (can be extended)
 
-```javascript
-// Compound index for user-specific URL queries
-UrlSchema.index({ user: 1, createdAt: -1 });
+### 4. Link Expiration
 
-// Unique index for short URL lookups
-UrlSchema.index({ shortUrl: 1 }, { unique: true });
+**Expiration Types**:
+- **Minutes**: Short-lived links (1-60 min)
+- **Hours**: Medium-duration links (1-24 hours)
+- **Days**: Long-duration links (1-365 days)
+- **Never**: Permanent links (null expiration)
 
-// User email index for authentication
-UserSchema.index({ email: 1 }, { unique: true });
-```
+**Expiration Handling**:
+- MongoDB TTL index automatically deletes expired URLs
+- Manual check during redirect
+- Expired links show "This link has expired" message
+- Cached expired links removed immediately
 
-## 🔐 Authentication System
+### 5. QR Code Generation
 
-### JWT Implementation
+**Implementation**:
+- Library: `qrcode` npm package
+- Format: PNG image as Base64 data URL
+- Storage: Embedded in URL document
+- Size: ~2-5 KB per QR code
 
-**Token Structure:**
+**QR Code Features**:
+- Encodes full original URL (not short URL)
+- Download as PNG file
+- Scannable by any QR reader
+- High error correction level
+
+### 6. Custom Aliases
+
+**Rules**:
+- Must be unique
+- Alphanumeric characters recommended
+- No length restriction (reasonable)
+- Case-sensitive
+
+**Validation**:
+- Check database for existing alias
+- Return error if taken
+- Allow user to try alternative
+
+---
+
+## Database Models
+
+### User Model (MongoDB)
 
 ```javascript
 {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    iat: timestamp,
-    exp: timestamp + 1hour
+  _id: ObjectId,              // Auto-generated
+  name: String,               // Required
+  email: String,              // Required, unique
+  password: String,           // Bcrypt hash
+  __v: Number                 // Version key
 }
 ```
 
-**Authentication Flow:**
+**Indexes**:
+- `email`: Unique index for fast lookups
 
-1. **Registration**
-
-   ```javascript
-   POST /register
-   ├── Validate input data
-   ├── Check if email exists
-   ├── Hash password with bcrypt
-   ├── Save user to database
-   └── Redirect to login
-   ```
-
-2. **Login**
-
-   ```javascript
-   POST /login
-   ├── Validate credentials
-   ├── Compare hashed password
-   ├── Generate JWT token
-   ├── Set httpOnly cookie
-   └── Redirect to dashboard
-   ```
-
-3. **Middleware Protection**
-
-   ```javascript
-   authMiddleware()
-   ├── Extract token from cookie
-   ├── Verify JWT signature
-   ├── Attach user to request
-   └── Continue or redirect
-   ```
-
-### Security Features
-
-- **Password Hashing**: bcrypt with salt rounds (10)
-- **JWT Secrets**: Environment-based secret keys
-- **HTTP-Only Cookies**: Prevent XSS token theft
-- **Input Validation**: Server-side validation for all inputs
-- **Route Protection**: Authenticated routes with middleware
-
-## ⚡ URL Shortening Algorithm
-
-### Code Generation
-
-```javascript
-function generateShortCode() {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let shortCode = "";
-
-  for (let i = 0; i < 6; i++) {
-    shortCode += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return shortCode;
-}
-```
-
-### Collision Handling
-
-```javascript
-async function createUniqueShortCode() {
-  let attempts = 0;
-  let shortCode;
-  let exists;
-
-  do {
-    shortCode = generateShortCode();
-    exists = await Url.findOne({ shortUrl: shortCode });
-    attempts++;
-  } while (exists && attempts < 5);
-
-  if (exists) {
-    throw new Error("Unable to generate unique short code");
-  }
-
-  return shortCode;
-}
-```
-
-### Custom Aliases
-
-Users can provide custom aliases with validation:
-
-```javascript
-if (customAlias) {
-  // Validate custom alias
-  if (!/^[a-zA-Z0-9-_]+$/.test(customAlias)) {
-    throw new Error("Invalid characters in custom alias");
-  }
-
-  if (customAlias.length > 20) {
-    throw new Error("Custom alias too long");
-  }
-
-  // Check availability
-  const exists = await Url.findOne({ shortUrl: customAlias });
-  if (exists) {
-    throw new Error("Custom alias already taken");
-  }
-}
-```
-
-## 📊 Click Tracking System
-
-### Click Recording
-
-```javascript
-app.get("/:short", async (req, res) => {
-  try {
-    // Find URL by short code
-    const url = await Url.findOne({ shortUrl: req.params.short });
-
-    if (!url) {
-      return res.status(404).send("URL not found");
-    }
-
-    // Increment click count atomically
-    await Url.findByIdAndUpdate(url._id, {
-      $inc: { clicks: 1 },
-    });
-
-    // Redirect to original URL
-    res.redirect(301, url.fullUrl);
-  } catch (error) {
-    console.error("Click tracking error:", error);
-    res.status(500).send("Server error");
-  }
-});
-```
-
-### Analytics Calculation
-
-```javascript
-// Dashboard statistics
-const urls = await Url.find({ user: req.user.id });
-const totalClicks = urls.reduce((sum, url) => sum + (url.clicks || 0), 0);
-const totalLinks = urls.length;
-const avgClicksPerLink =
-  totalLinks > 0 ? (totalClicks / totalLinks).toFixed(1) : 0;
-
-const stats = {
-  totalLinks,
-  totalClicks,
-  avgClicksPerLink,
-  topPerformer: urls.sort((a, b) => (b.clicks || 0) - (a.clicks || 0))[0],
-};
-```
-
-### Real-time Updates
-
-Click data updates immediately in the database using MongoDB's atomic operations:
-
-```javascript
-// Atomic increment operation
+**Sample Document**:
+```json
 {
-  $inc: {
-    clicks: 1;
-  }
+  "_id": "507f1f77bcf86cd799439011",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+  "__v": 0
 }
-
-// This ensures:
-// - No race conditions
-// - Immediate consistency
-// - High performance
 ```
 
-## 🎨 Frontend Implementation
-
-### Template Structure
-
-``` text
-views/
-├── partials/
-│   ├── header.ejs       # Navigation + Dark mode toggle
-│   └── footer.ejs       # Footer with links
-├── index.ejs           # Landing page
-├── login.ejs           # Login form
-├── register.ejs        # Registration form
-├── dashboard.ejs       # Main dashboard
-└── layout.ejs          # Base layout (legacy)
-```
-
-### Responsive Design
-
-**Tailwind CSS Classes Used:**
-
-```css
-/* Mobile-first responsive grid */
-.grid.md:grid-cols-3     /* 1 col mobile, 3 cols desktop */
-.flex.flex-col.lg:flex-row   /* Column mobile, row desktop */
-
-/* Dark mode support */
-.bg-white.dark:bg-gray-800   /* Light/dark backgrounds */
-.text-gray-900.dark:text-gray-100   /* Light/dark text */
-
-/* Interactive states */
-.hover:shadow-lg.transition-all.duration-200   /* Smooth animations */
-```
-
-### Dark Mode Implementation
-
-**JavaScript Toggle:**
+### URL Model (MongoDB)
 
 ```javascript
-function toggleDarkMode() {
-  const html = document.documentElement;
-  const isDark = html.classList.toggle("dark");
-  localStorage.setItem("darkMode", isDark.toString());
-  updateDarkModeIcon(isDark);
-}
-
-function initDarkMode() {
-  const saved = localStorage.getItem("darkMode");
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const shouldBeDark = saved === "true" || (saved === null && prefersDark);
-
-  if (shouldBeDark) {
-    document.documentElement.classList.add("dark");
-  }
-
-  updateDarkModeIcon(shouldBeDark);
+{
+  _id: ObjectId,              // Auto-generated
+  fullUrl: String,            // Required
+  shortUrl: String,           // Required, unique
+  user: ObjectId,             // Required, ref: User
+  clicks: Number,             // Default: 0
+  createdAt: Date,            // Default: Date.now
+  expiresAt: Date,            // Optional, null for permanent
+  isExpired: Boolean,         // Default: false
+  qrCode: String,             // Base64 data URL
+  __v: Number                 // Version key
 }
 ```
 
-**Tailwind Configuration:**
+**Indexes**:
+- `shortUrl`: Unique index for fast lookups
+- `expiresAt`: TTL index (sparse, expireAfterSeconds: 0)
+- `user`: Index for user's URLs query
 
-```javascript
-tailwind.config = {
-  darkMode: "class", // Use class-based dark mode
-  theme: {
-    extend: {
-      colors: {
-        primary: "#231F20",
-        secondary: "#BB4430",
-        accent: "#7EBDC2",
-      },
-    },
-  },
-};
-```
-
-### Interactive Features
-
-**Copy to Clipboard:**
-
-```javascript
-function copyToClipboard(text, button) {
-  navigator.clipboard.writeText(text).then(() => {
-    // Visual feedback
-    const icon = button.querySelector(".copy-icon");
-    const textSpan = button.querySelector(".copy-text");
-
-    // Show success state
-    icon.innerHTML = checkmarkSVG;
-    textSpan.textContent = "Copied!";
-    button.classList.add("bg-green-500");
-
-    // Reset after 2 seconds
-    setTimeout(() => {
-      icon.innerHTML = clipboardSVG;
-      textSpan.textContent = "Copy";
-      button.classList.remove("bg-green-500");
-    }, 2000);
-  });
+**Sample Document**:
+```json
+{
+  "_id": "507f191e810c19729de860ea",
+  "fullUrl": "https://example.com/very-long-url",
+  "shortUrl": "aBc123",
+  "user": "507f1f77bcf86cd799439011",
+  "clicks": 42,
+  "createdAt": "2025-11-24T10:30:00.000Z",
+  "expiresAt": "2025-12-24T10:30:00.000Z",
+  "isExpired": false,
+  "qrCode": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+  "__v": 0
 }
 ```
 
-## 📡 API Documentation
+---
 
-### Authentication Endpoints
+## API Endpoints
 
-#### POST /register
+### Public Routes
 
-Register a new user account.
+#### `GET /`
+**Description**: Homepage/landing page
+**Authentication**: None
+**Response**: HTML (index.ejs)
 
-**Request Body:**
+#### `GET /:short`
+**Description**: Redirect short URL to original URL
+**Authentication**: None
+**Parameters**: 
+- `short` (string): 6-character short code
+**Response**: 
+- 302 Redirect to original URL
+- 404 "URL not found"
+- 410 "This link has expired"
+**Side Effects**:
+- Increments click counter
+- Updates cache
 
+### Authentication Routes
+
+#### `GET /login`
+**Description**: Login page
+**Authentication**: None
+**Response**: HTML (login.ejs)
+
+#### `POST /login`
+**Description**: Authenticate user
+**Authentication**: None
+**Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+**Response**:
+- Success: 302 Redirect to /dashboard with JWT cookie
+- Error: HTML with error message
+
+#### `GET /register`
+**Description**: Registration page
+**Authentication**: None
+**Response**: HTML (register.ejs)
+
+#### `POST /register`
+**Description**: Create new user account
+**Authentication**: None
+**Body**:
 ```json
 {
   "name": "John Doe",
-  "email": "john@example.com",
-  "password": "securepassword123"
+  "email": "user@example.com",
+  "password": "password123"
 }
 ```
+**Response**:
+- Success: 302 Redirect to /login
+- Error: HTML with error message
 
-**Response:**
+#### `GET /logout`
+**Description**: Logout user
+**Authentication**: Optional
+**Response**: 302 Redirect to / (clears JWT cookie)
 
-- Success: Redirect to `/login`
-- Error: Render register page with error message
+### Protected Routes (Require Authentication)
 
-#### POST /login
+#### `GET /dashboard`
+**Description**: User dashboard with URL management
+**Authentication**: Required
+**Response**: HTML (dashboard.ejs) with:
+- User's URL list
+- Statistics (total links, clicks, rate)
+- Redis status
 
-Authenticate user and create session.
-
-**Request Body:**
-
+#### `POST /shorten`
+**Description**: Create shortened URL
+**Authentication**: Required
+**Body**:
 ```json
 {
-  "email": "john@example.com",
-  "password": "securepassword123"
+  "fullUrl": "https://example.com/long-url",
+  "custom": "mylink",
+  "validityValue": "30",
+  "validityUnit": "days",
+  "generateQR": "on"
 }
 ```
+**Response**: 302 Redirect to /dashboard
+**Side Effects**:
+- Creates URL document
+- Caches in Redis
+- Generates QR code if requested
 
-**Response:**
+#### `POST /delete/:id`
+**Description**: Delete shortened URL
+**Authentication**: Required (owner only)
+**Parameters**:
+- `id` (string): MongoDB ObjectId
+**Response**: 302 Redirect to /dashboard
+**Side Effects**:
+- Deletes URL document
+- Removes from cache
 
-- Success: Set JWT cookie, redirect to `/dashboard`
-- Error: Render login page with error message
+#### `GET /qr/download/:id`
+**Description**: Download QR code image
+**Authentication**: Required (owner only)
+**Parameters**:
+- `id` (string): MongoDB ObjectId
+**Response**: PNG image file
+**Headers**:
+- `Content-Type: image/png`
+- `Content-Disposition: attachment; filename="qr-<shortcode>.png"`
 
-#### GET /logout
+### API Routes
 
-Clear user session and redirect to homepage.
-
-**Response:**
-
-- Clear JWT cookie
-- Redirect to `/`
-
-### URL Management Endpoints
-
-#### GET /dashboard
-
-Get user's dashboard with all URLs and statistics.
-
-**Authentication:** Required
-
-**Response Data:**
-
-```javascript
-{
-    user: currentUser,
-    urls: [/* user's URLs */],
-    host: "http://localhost:3000",
-    shortDomain: "https://lnk.to",
-    totalClicks: 42,
-    totalLinks: 5,
-    clickRate: "8.4"
-}
-```
-
-#### POST /shorten
-
-Create a new shortened URL.
-
-**Authentication:** Required
-
-**Request Body:**
-
+#### `GET /api/redis-status`
+**Description**: Redis cache statistics
+**Authentication**: Required
+**Response**:
 ```json
 {
-  "fullUrl": "https://www.example.com/very/long/url",
-  "custom": "mylink" // Optional custom alias
+  "enabled": true,
+  "connected": true,
+  "stats": {
+    "totalKeys": 150,
+    "urlsCached": 100,
+    "clickCounters": 40,
+    "userCaches": 10
+  }
 }
 ```
 
-**Response:**
+---
 
-- Success: Redirect to `/dashboard`
-- Error: Display error message
+## Application Workflow
 
-#### POST /delete/:id
+### Complete User Journey
 
-Delete a specific URL.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     1. User Visits Site                      │
+│                         GET /                                │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+                ┌────────────┴────────────┐
+                │                         │
+         ┌──────▼───────┐       ┌────────▼────────┐
+         │   Browse     │       │   Register      │
+         │   Features   │       │   GET /register │
+         └──────┬───────┘       └────────┬────────┘
+                │                        │
+                │                 POST /register
+                │                        │
+         ┌──────▼────────────────────────▼─────┐
+         │           Login                     │
+         │        POST /login                  │
+         └──────┬──────────────────────────────┘
+                │
+                │ (JWT Cookie Set)
+                │
+         ┌──────▼───────────────────────────────┐
+         │         Dashboard                     │
+         │      GET /dashboard                   │
+         │                                       │
+         │  ┌─────────────────────────────────┐ │
+         │  │  Create Short Link              │ │
+         │  │  POST /shorten                  │ │
+         │  └────────┬────────────────────────┘ │
+         │           │                           │
+         │  ┌────────▼────────────────────────┐ │
+         │  │  View Links & Stats             │ │
+         │  │  - Total Clicks                 │ │
+         │  │  - Click Rate                   │ │
+         │  │  - Link List                    │ │
+         │  └────────┬────────────────────────┘ │
+         │           │                           │
+         │  ┌────────▼────────────────────────┐ │
+         │  │  Manage Links                   │ │
+         │  │  - Copy Short URL               │ │
+         │  │  - Download QR Code             │ │
+         │  │  - Delete Link                  │ │
+         │  └─────────────────────────────────┘ │
+         └──────────────────────────────────────┘
 
-**Authentication:** Required
-**Authorization:** URL must belong to authenticated user
-
-**Parameters:**
-
-- `id`: MongoDB ObjectId of the URL to delete
-
-**Response:**
-
-- Success: Redirect to `/dashboard`
-- Error: 404 or 403 status
-
-#### GET /:shortCode
-
-Redirect to original URL and increment click counter.
-
-**Parameters:**
-
-- `shortCode`: The short URL identifier
-
-**Response:**
-
-- Success: 301 redirect to original URL
-- Error: 404 "URL not found"
-
-### Error Handling
-
-```javascript
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-
-  if (err.name === "ValidationError") {
-    return res.status(400).send("Invalid input data");
-  }
-
-  if (err.name === "UnauthorizedError") {
-    return res.redirect("/login");
-  }
-
-  res.status(500).send("Internal Server Error");
-});
+┌──────────────────────────────────────────────────────────────┐
+│              2. Share Short Link (External User)              │
+│                    GET /:short                                │
+└────────────────────────────┬─────────────────────────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  Check Cache    │
+                    │   (Redis)       │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  Query Database │
+                    │   (if needed)   │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  Check          │
+                    │  Expiration     │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  Increment      │
+                    │  Click Counter  │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  302 Redirect   │
+                    │  to Full URL    │
+                    └─────────────────┘
 ```
 
-## 🛡️ Security Measures
+### Typical Use Cases
+
+#### Use Case 1: First-Time User
+1. Visit homepage (`/`)
+2. Click "Get Started" or "Register"
+3. Fill registration form
+4. Confirm email (optional - not implemented)
+5. Login with credentials
+6. Redirected to dashboard
+
+#### Use Case 2: Create Short Link
+1. User logs in
+2. Navigate to dashboard
+3. Enter long URL in form
+4. Optionally set custom alias
+5. Optionally set expiration
+6. Toggle QR code generation
+7. Click "Shorten"
+8. View new link in dashboard table
+9. Copy short URL
+10. Share with others
+
+#### Use Case 3: Track Link Performance
+1. User logs in
+2. View dashboard
+3. See statistics:
+   - Total links created
+   - Total clicks across all links
+   - Average click rate
+4. View individual link metrics in table
+5. Monitor real-time click updates
+
+#### Use Case 4: Share Link
+1. Copy short URL from dashboard
+2. Share via email, social media, QR code
+3. Recipients click link
+4. System tracks click
+5. Redirects to original URL
+6. Click count updates in dashboard
+
+---
+
+## Caching Strategy
+
+### Redis Cache Architecture
+
+**Cache Keys Pattern**:
+- `url:<shortCode>`: URL document data
+- `clicks:<shortCode>`: Click counter
+- `user:<userId>:urls`: User's URL list
+
+**TTL (Time-To-Live) Settings**:
+- URL data: 3600 seconds (1 hour)
+- User URLs: 300 seconds (5 minutes)
+- Click counters: No expiration (persistent)
+
+### Caching Flow
+
+#### Cache Hit (Fast Path)
+```
+Request → Redis Cache → Return Data (< 5ms)
+```
+
+#### Cache Miss (Slow Path)
+```
+Request → Redis Cache (miss) → MongoDB → Cache Result → Return Data (50-100ms)
+```
+
+### Cache Invalidation Strategy
+
+**Invalidation Triggers**:
+1. **URL Creation**: Cache new URL immediately
+2. **URL Deletion**: Remove from cache
+3. **Click Tracking**: Invalidate URL cache (force fresh data)
+4. **User URL List**: Invalidate on any URL change
+
+**Pattern**:
+```javascript
+// Write-through cache
+await Url.create(data);           // Write to DB
+await cache.setUrl(short, data);  // Write to cache
+
+// Cache-aside with invalidation
+await Url.update({ $inc: { clicks: 1 } });  // Update DB
+await cache.deleteUrl(short);               // Invalidate cache
+```
+
+### Performance Benefits
+
+**Without Redis**:
+- Every redirect: ~50-100ms (MongoDB query)
+- 1000 requests/sec = 1000 DB queries/sec
+
+**With Redis**:
+- Cache hit: ~5ms
+- Cache miss: ~50-100ms (then cached)
+- 1000 requests/sec = ~950 cache hits, 50 DB queries
+
+**Estimated Performance Improvement**: 10-20x faster response times
+
+---
+
+## Security
+
+### Authentication Security
+
+**Password Security**:
+- Hashing algorithm: bcrypt
+- Salt rounds: 10
+- Rainbow table resistant
+- Timing attack resistant
+
+**JWT Security**:
+- HTTP-only cookies (prevents XSS)
+- Signed tokens (prevents tampering)
+- 1-hour expiration
+- Secret key from environment variable
+- No sensitive data in payload
+
+### HTTPS/SSL Support
+
+**Certificate Options**:
+1. **Development**: Self-signed (generated via `generate-certs.js`)
+2. **Production**: Let's Encrypt or AWS Certificate Manager
+
+**HTTPS Configuration**:
+```env
+ENABLE_HTTPS=true
+HTTPS_PORT=3443
+HTTPS_CERT_PATH=./certs/localhost.pem
+HTTPS_KEY_PATH=./certs/localhost-key.pem
+```
+
+**Features**:
+- TLS 1.2/1.3 support
+- HTTP to HTTPS redirect
+- Secure cookie flag (production)
 
 ### Input Validation
 
-**URL Validation:**
+**URL Validation**:
+- HTML5 `type="url"` validation
+- Server-side URL format check
+- Protocol requirement (http/https)
 
-```javascript
-const validator = require("validator");
+**SQL Injection Prevention**:
+- Mongoose parameterized queries
+- No raw query string concatenation
 
-function validateURL(url) {
-  if (
-    !validator.isURL(url, {
-      protocols: ["http", "https"],
-      require_protocol: true,
-    })
-  ) {
-    throw new Error("Invalid URL format");
-  }
+**XSS Prevention**:
+- EJS auto-escaping
+- HTTP-only cookies
+- Content Security Policy (can be added)
 
-  // Prevent shortened URL loops
-  if (url.includes(process.env.SHORT_DOMAIN)) {
-    throw new Error("Cannot shorten our own domain");
-  }
-}
+### Access Control
+
+**Authorization Rules**:
+- Users can only view/delete their own URLs
+- Dashboard requires authentication
+- JWT verification on protected routes
+- Owner check before URL deletion
+
+---
+
+## Testing
+
+### Test Coverage
+
+**Current Coverage** (from `coverage/` directory):
+- Statements: High
+- Branches: Medium
+- Functions: High
+- Lines: High
+
+### Unit Tests (`__tests__/`)
+
+**Test Framework**: Jest
+
+**Test Suites**:
+
+1. **auth.test.js** - Authentication utilities
+   - Password hashing
+   - Password comparison
+   - JWT token creation
+   - JWT token verification
+   - Token rejection (invalid/expired)
+
+2. **models.test.js** - Database models
+   - User schema validation
+   - URL schema validation
+   - Default values
+   - Required fields
+   - Unique constraints
+
+3. **utils.test.js** - Utility functions
+   - Helper functions
+   - Validation logic
+
+4. **integration.test.js** - API integration
+   - User registration
+   - User login
+   - URL creation
+   - URL deletion
+   - Click tracking
+
+**Running Unit Tests**:
+```bash
+npm test              # Run once with coverage
+npm run test:watch   # Watch mode
 ```
 
-**Custom Alias Validation:**
+### End-to-End Tests (`e2e/`)
 
-```javascript
-function validateCustomAlias(alias) {
-  // Allow only alphanumeric, hyphens, and underscores
-  if (!/^[a-zA-Z0-9-_]+$/.test(alias)) {
-    throw new Error("Invalid characters in alias");
-  }
+**Test Framework**: Playwright
 
-  // Length limits
-  if (alias.length < 2 || alias.length > 20) {
-    throw new Error("Alias must be 2-20 characters");
-  }
+**Browser Coverage**:
+- Chromium (Chrome/Edge)
+- Firefox
+- WebKit (Safari)
 
-  // Reserved words
-  const reserved = ["api", "admin", "www", "login", "register"];
-  if (reserved.includes(alias.toLowerCase())) {
-    throw new Error("Alias is reserved");
-  }
-}
+**Test Scenarios**:
+
+1. **Navigation**
+   - Homepage load
+   - Login page navigation
+   - Register page navigation
+
+2. **Authentication**
+   - User registration
+   - User login
+   - Login validation
+   - Logout
+
+3. **URL Management**
+   - Create short URL
+   - Custom alias
+   - Set expiration
+   - Generate QR code
+   - Copy to clipboard
+   - Delete URL
+
+4. **UI/UX**
+   - Dark mode toggle
+   - Responsive design
+   - Form validation
+   - Error messages
+
+**Running E2E Tests**:
+```bash
+npm run test:integration      # Headless mode
+npm run test:integration:ui   # UI mode (interactive)
 ```
 
-### Rate Limiting
+### Test Environment
 
+**Configuration** (`__tests__/setup.js`):
 ```javascript
-const rateLimit = require("express-rate-limit");
-
-// General rate limiting
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: "Too many requests, please try again later",
-});
-
-// Strict rate limiting for URL creation
-const createLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // Limit each IP to 10 URL creations per minute
-  message: "Too many URLs created, please wait",
-});
-
-app.use("/shorten", createLimiter);
-app.use(generalLimiter);
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing';
+process.env.MONGO_URL = 'mongodb://localhost:27017/linkshort-test';
+jest.setTimeout(10000);
 ```
 
-### SQL Injection Prevention
+**Isolation**:
+- Separate test database
+- Test JWT secret
+- No production data affected
 
-Using Mongoose ODM prevents SQL injection attacks:
+---
 
-```javascript
-// Safe parameterized queries
-await Url.findOne({ shortUrl: req.params.short });
-await User.findOne({ email: req.body.email });
+## Environment Configuration
 
-// Mongoose automatically escapes and validates
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# ==========================================
+# REQUIRED VARIABLES
+# ==========================================
+
+# MongoDB connection string
+MONGO_URL=mongodb://localhost:27017/linkshort
+
+# JWT secret key (use strong random string in production)
+JWT_SECRET=your-super-secret-jwt-key-min-32-chars
+
+# ==========================================
+# OPTIONAL VARIABLES
+# ==========================================
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Short URL Display Domain (for UI display only)
+SHORT_DOMAIN=https://lnk.to
+
+# Redis Configuration
+ENABLE_REDIS=true
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# HTTPS Configuration
+ENABLE_HTTPS=false
+HTTPS_PORT=3443
+HTTPS_CERT_PATH=./certs/localhost.pem
+HTTPS_KEY_PATH=./certs/localhost-key.pem
+HTTP_PORT=3000
 ```
 
-### XSS Prevention
+### Configuration Reference
 
-**EJS Auto-escaping:**
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `MONGO_URL` | string | *required* | MongoDB connection string |
+| `JWT_SECRET` | string | *required* | Secret key for JWT signing (min 32 chars recommended) |
+| `PORT` | number | `3000` | HTTP server port |
+| `NODE_ENV` | string | `development` | Environment (`development`, `production`, `test`) |
+| `SHORT_DOMAIN` | string | `https://lnk.to` | Display domain for short links (UI only) |
+| `ENABLE_REDIS` | boolean | `true` | Enable Redis caching |
+| `REDIS_HOST` | string | `localhost` | Redis server hostname |
+| `REDIS_PORT` | number | `6379` | Redis server port |
+| `REDIS_PASSWORD` | string | - | Redis authentication password |
+| `ENABLE_HTTPS` | boolean | `false` | Enable HTTPS server |
+| `HTTPS_PORT` | number | `3443` | HTTPS server port |
+| `HTTPS_CERT_PATH` | string | `./certs/localhost.pem` | Path to SSL certificate |
+| `HTTPS_KEY_PATH` | string | `./certs/localhost-key.pem` | Path to SSL private key |
+| `HTTP_PORT` | number | `3000` | HTTP port (redirects to HTTPS if enabled) |
 
-```html
-<!-- Automatically escaped -->
-<%= userInput %>
+### Production Environment
 
-<!-- Manual escaping when needed -->
-<%- escapeHtml(userInput) %>
+**Production `.env` Example**:
+```env
+NODE_ENV=production
+MONGO_URL=mongodb+srv://user:pass@cluster.mongodb.net/linkshort?retryWrites=true&w=majority
+JWT_SECRET=<64-character-random-string>
+PORT=8080
+SHORT_DOMAIN=https://lnk.yourdomain.com
+ENABLE_REDIS=true
+REDIS_HOST=your-redis-host.cache.amazonaws.com
+REDIS_PORT=6379
+ENABLE_HTTPS=true
+HTTPS_PORT=443
+HTTPS_CERT_PATH=/etc/letsencrypt/live/yourdomain.com/fullchain.pem
+HTTPS_KEY_PATH=/etc/letsencrypt/live/yourdomain.com/privkey.pem
 ```
 
-**Content Security Policy:**
+**Security Recommendations**:
+- Use strong, random JWT secret (64+ characters)
+- Enable HTTPS in production
+- Use MongoDB Atlas or managed MongoDB
+- Use AWS ElastiCache or managed Redis
+- Set secure cookie flags
+- Enable rate limiting (add middleware)
+- Implement CORS policies
+- Add helmet.js for security headers
 
+---
+
+## Development Setup
+
+### Prerequisites
+
+**Required Software**:
+- Node.js v14.0.0 or higher
+- npm v6.0.0 or higher
+- MongoDB v4.4 or higher
+- Redis v6.0 or higher (optional but recommended)
+- Git
+
+**Recommended Tools**:
+- Visual Studio Code
+- MongoDB Compass (GUI for MongoDB)
+- Redis Insight (GUI for Redis)
+- Postman (API testing)
+
+### Step-by-Step Setup
+
+#### 1. Clone Repository
+```bash
+git clone https://github.com/anuj2301/BEE.git
+cd BEE
+```
+
+#### 2. Install Dependencies
+```bash
+npm install
+```
+
+#### 3. Install MongoDB
+
+**Windows**:
+```powershell
+# Download from https://www.mongodb.com/try/download/community
+# Run installer
+# Start MongoDB service
+net start MongoDB
+```
+
+**macOS**:
+```bash
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+```
+
+**Linux**:
+```bash
+sudo apt-get install mongodb
+sudo systemctl start mongod
+```
+
+#### 4. Install Redis (Optional)
+
+**Windows**:
+```powershell
+# Download from https://github.com/tporadowski/redis/releases
+# Run installer
+# Start Redis service
+redis-server
+```
+
+**macOS**:
+```bash
+brew install redis
+brew services start redis
+```
+
+**Linux**:
+```bash
+sudo apt-get install redis-server
+sudo systemctl start redis
+```
+
+#### 5. Configure Environment
+```bash
+# Copy example (if exists) or create new
+cp .env.example .env
+
+# Edit .env file
+notepad .env  # Windows
+nano .env     # Linux/Mac
+```
+
+**Minimal `.env` for development**:
+```env
+MONGO_URL=mongodb://localhost:27017/linkshort
+JWT_SECRET=dev-secret-key-change-in-production-min-32-chars
+PORT=3000
+ENABLE_REDIS=true
+```
+
+#### 6. Generate SSL Certificates (Optional)
+```bash
+node generate-certs.js
+```
+
+Update `.env`:
+```env
+ENABLE_HTTPS=true
+HTTPS_PORT=3443
+```
+
+#### 7. Start Development Server
+```bash
+npm run dev
+```
+
+Server will start at:
+- HTTP: `http://localhost:3000`
+- HTTPS: `https://localhost:3443` (if enabled)
+
+#### 8. Verify Setup
+
+**Check MongoDB Connection**:
+- Look for "MongoDB connected" in console
+
+**Check Redis Connection**:
+- Look for "✓ Redis connected" in console
+- If Redis fails, app continues without caching
+
+**Access Application**:
+- Open browser to `http://localhost:3000`
+- Register a new account
+- Create a short URL
+- Test redirection
+
+### Development Workflow
+
+#### Hot Reload
+```bash
+npm run dev  # Uses nodemon for auto-restart
+```
+
+#### Debugging
 ```javascript
+// Add breakpoints in VS Code
+// Use debugger; statement
+// Check console.log() output
+```
+
+#### Database Inspection
+```bash
+# MongoDB Shell
+mongosh
+use linkshort
+db.users.find()
+db.urls.find()
+
+# OR use MongoDB Compass GUI
+```
+
+#### Cache Inspection
+```bash
+# Redis CLI
+redis-cli
+KEYS *
+GET url:aBc123
+```
+
+---
+
+## Deployment
+
+### AWS Elastic Beanstalk (Recommended)
+
+#### Prerequisites
+- AWS account
+- AWS CLI installed
+- EB CLI installed
+
+#### Deployment Steps
+
+1. **Initialize Elastic Beanstalk**:
+```bash
+eb init -p node.js-14 linkshort-app --region us-east-1
+```
+
+2. **Create Environment**:
+```bash
+eb create linkshort-env
+```
+
+3. **Configure Environment Variables**:
+```bash
+eb setenv MONGO_URL=<mongodb-atlas-url> \
+          JWT_SECRET=<production-secret> \
+          ENABLE_REDIS=true \
+          REDIS_HOST=<elasticache-endpoint>
+```
+
+4. **Deploy Application**:
+```bash
+eb deploy
+```
+
+5. **Open Application**:
+```bash
+eb open
+```
+
+#### AWS Services Used
+
+- **Elastic Beanstalk**: Application hosting
+- **MongoDB Atlas**: Managed MongoDB
+- **ElastiCache (Redis)**: Managed Redis cache
+- **Route 53**: DNS management
+- **Certificate Manager**: SSL/TLS certificates
+- **CloudWatch**: Logging and monitoring
+
+### Docker Deployment
+
+#### Create Dockerfile
+```dockerfile
+FROM node:14-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+```
+
+#### Build and Run
+```bash
+# Build image
+docker build -t linkshort:latest .
+
+# Run container
+docker run -d -p 3000:3000 \
+  -e MONGO_URL=mongodb://mongo:27017/linkshort \
+  -e JWT_SECRET=your-secret \
+  --name linkshort \
+  linkshort:latest
+```
+
+#### Docker Compose
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/linkshort
+      - JWT_SECRET=your-secret
+      - REDIS_HOST=redis
+    depends_on:
+      - mongo
+      - redis
+
+  mongo:
+    image: mongo:4.4
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  mongo-data:
+```
+
+### Heroku Deployment
+
+```bash
+# Login to Heroku
+heroku login
+
+# Create app
+heroku create linkshort-app
+
+# Add MongoDB
+heroku addons:create mongolab:sandbox
+
+# Add Redis
+heroku addons:create heroku-redis:hobby-dev
+
+# Set environment variables
+heroku config:set JWT_SECRET=your-secret
+
+# Deploy
+git push heroku main
+
+# Open app
+heroku open
+```
+
+### DigitalOcean App Platform
+
+1. Connect GitHub repository
+2. Select Node.js environment
+3. Add environment variables
+4. Configure MongoDB (managed database)
+5. Deploy
+
+### Production Checklist
+
+- [ ] Set `NODE_ENV=production`
+- [ ] Use strong JWT secret (64+ chars)
+- [ ] Enable HTTPS
+- [ ] Use managed MongoDB (Atlas, AWS DocumentDB)
+- [ ] Use managed Redis (ElastiCache, Redis Labs)
+- [ ] Configure reverse proxy (Nginx)
+- [ ] Enable gzip compression
+- [ ] Set up logging (Winston, CloudWatch)
+- [ ] Configure monitoring (New Relic, Datadog)
+- [ ] Set up error tracking (Sentry)
+- [ ] Enable rate limiting
+- [ ] Configure CORS policies
+- [ ] Add security headers (helmet.js)
+- [ ] Set up backups (automated)
+- [ ] Configure CDN (CloudFront, Cloudflare)
+- [ ] Set up CI/CD pipeline
+- [ ] Load testing
+- [ ] Security audit
+- [ ] Performance optimization
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. MongoDB Connection Failed
+
+**Error**: `MongoNetworkError: connect ECONNREFUSED`
+
+**Solutions**:
+- Check MongoDB is running: `mongosh` or `sudo systemctl status mongod`
+- Verify `MONGO_URL` in `.env`
+- Check MongoDB port (default: 27017)
+- Firewall blocking connection?
+- MongoDB Atlas: Check IP whitelist
+
+#### 2. Redis Connection Failed
+
+**Error**: `Redis connection error: ECONNREFUSED`
+
+**Solutions**:
+- Redis is optional; app continues without it
+- Check Redis is running: `redis-cli ping`
+- Verify `REDIS_HOST` and `REDIS_PORT`
+- Set `ENABLE_REDIS=false` to disable
+
+#### 3. JWT Token Invalid
+
+**Error**: `JsonWebTokenError: invalid signature`
+
+**Solutions**:
+- Check `JWT_SECRET` in `.env`
+- Clear browser cookies
+- Re-login to get new token
+- Ensure JWT_SECRET is same across app restarts
+
+#### 4. HTTPS Certificate Error
+
+**Error**: `Error: ENOENT: no such file or directory`
+
+**Solutions**:
+- Generate certificates: `node generate-certs.js`
+- Check `HTTPS_CERT_PATH` and `HTTPS_KEY_PATH`
+- Set `ENABLE_HTTPS=false` for HTTP-only
+- Browser warning for self-signed cert (expected in dev)
+
+#### 5. Port Already in Use
+
+**Error**: `Error: listen EADDRINUSE: address already in use :::3000`
+
+**Solutions**:
+```bash
+# Windows
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+# Linux/Mac
+lsof -i :3000
+kill -9 <PID>
+```
+
+#### 6. npm install Failures
+
+**Error**: `npm ERR! code EINTEGRITY`
+
+**Solutions**:
+```bash
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install
+```
+
+#### 7. Test Failures
+
+**Error**: `FAIL __tests__/auth.test.js`
+
+**Solutions**:
+- Check test database is accessible
+- Verify `JWT_SECRET` in setup.js
+- Run tests individually: `npm test -- auth.test.js`
+- Clear test database
+
+#### 8. Click Counter Not Updating
+
+**Symptoms**: Clicks not incrementing in dashboard
+
+**Solutions**:
+- Check MongoDB connection
+- Verify URL exists in database
+- Check Redis cache invalidation
+- Refresh dashboard page
+- Check browser console for errors
+
+### Debug Mode
+
+**Enable verbose logging**:
+```javascript
+// In server.js, add:
 app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; " +
-      "style-src 'self' 'unsafe-inline';"
-  );
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 ```
 
-## ⚡ Performance Optimization
-
-### Database Optimization
-
-**Indexing Strategy:**
-
+**MongoDB debug**:
 ```javascript
-// Primary indexes
-UrlSchema.index({ shortUrl: 1 }, { unique: true }); // Fast lookups
-UserSchema.index({ email: 1 }, { unique: true }); // Authentication
-
-// Compound indexes
-UrlSchema.index({ user: 1, createdAt: -1 }); // User dashboard queries
-UrlSchema.index({ user: 1, clicks: -1 }); // Top performing URLs
+mongoose.set('debug', true);
 ```
 
-**Query Optimization:**
-
+**Redis debug**:
 ```javascript
-// Efficient user URL fetching
-const urls = await Url.find({ user: req.user.id })
-  .sort({ createdAt: -1 })
-  .limit(50)
-  .lean(); // Return plain JS objects, not Mongoose docs
-
-// Aggregation for statistics
-const stats = await Url.aggregate([
-  { $match: { user: mongoose.Types.ObjectId(req.user.id) } },
-  {
-    $group: {
-      _id: null,
-      totalUrls: { $sum: 1 },
-      totalClicks: { $sum: "$clicks" },
-      avgClicks: { $avg: "$clicks" },
-    },
-  },
-]);
-```
-
-### Caching Strategy
-
-**In-Memory Caching:**
-
-```javascript
-const NodeCache = require("node-cache");
-const cache = new NodeCache({ stdTTL: 300 }); // 5 minute cache
-
-// Cache popular short URLs
-app.get("/:short", async (req, res) => {
-  const cacheKey = `url:${req.params.short}`;
-  let url = cache.get(cacheKey);
-
-  if (!url) {
-    url = await Url.findOne({ shortUrl: req.params.short });
-    if (url) {
-      cache.set(cacheKey, url);
-    }
-  }
-
-  if (!url) {
-    return res.status(404).send("URL not found");
-  }
-
-  // Increment counter (don't wait)
-  Url.findByIdAndUpdate(url._id, { $inc: { clicks: 1 } }).exec();
-
-  res.redirect(301, url.fullUrl);
-});
-```
-
-**Redis Integration (Production):**
-
-```javascript
-const redis = require("redis");
-const client = redis.createClient(process.env.REDIS_URL);
-
-// Cache with Redis
-async function getCachedUrl(shortCode) {
-  const cached = await client.get(`url:${shortCode}`);
-  if (cached) {
-    return JSON.parse(cached);
-  }
-
-  const url = await Url.findOne({ shortUrl: shortCode });
-  if (url) {
-    await client.setex(`url:${shortCode}`, 300, JSON.stringify(url));
-  }
-
-  return url;
-}
-```
-
-### Frontend Optimization
-
-**Asset Optimization:**
-
-```html
-<!-- Preload critical resources -->
-<link rel="preload" href="https://cdn.tailwindcss.com" as="style" />
-
-<!-- Lazy load non-critical scripts -->
-<script defer src="/js/analytics.js"></script>
-
-<!-- Optimize images -->
-<img src="logo.webp" alt="Logo" loading="lazy" />
-```
-
-**JavaScript Optimization:**
-
-```javascript
-// Debounced search
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-const searchUrls = debounce((query) => {
-  // Search implementation
-}, 300);
-```
-
-## 🔄 Development Workflow
-
-### Git Workflow
-
-```bash
-# Feature development
-git checkout -b feature/click-analytics
-git add .
-git commit -m "Add click analytics dashboard"
-git push origin feature/click-analytics
-
-# Create pull request
-# Code review
-# Merge to main
-```
-
-### Testing Strategy
-
-**Unit Tests:**
-
-```javascript
-const request = require("supertest");
-const app = require("../server");
-
-describe("URL Shortening", () => {
-  test("should create short URL", async () => {
-    const response = await request(app)
-      .post("/shorten")
-      .send({
-        fullUrl: "https://example.com",
-        custom: "test123",
-      })
-      .expect(302); // Redirect after creation
-  });
-
-  test("should increment clicks", async () => {
-    const url = await Url.create({
-      fullUrl: "https://example.com",
-      shortUrl: "test123",
-      user: userId,
-    });
-
-    await request(app).get("/test123").expect(301);
-
-    const updated = await Url.findById(url._id);
-    expect(updated.clicks).toBe(1);
-  });
-});
-```
-
-**Integration Tests:**
-
-```javascript
-describe("Authentication Flow", () => {
-  test("should register and login user", async () => {
-    // Register
-    await request(app).post("/register").send({
-      name: "Test User",
-      email: "test@example.com",
-      password: "password123",
-    });
-
-    // Login
-    const response = await request(app).post("/login").send({
-      email: "test@example.com",
-      password: "password123",
-    });
-
-    expect(response.headers["set-cookie"]).toBeDefined();
-  });
-});
-```
-
-### Code Quality
-
-**ESLint Configuration:**
-
-```json
-{
-  "extends": ["eslint:recommended", "node"],
-  "rules": {
-    "no-console": "warn",
-    "no-unused-vars": "error",
-    "semi": ["error", "always"],
-    "quotes": ["error", "single"]
-  }
-}
-```
-
-**Prettier Configuration:**
-
-```json
-{
-  "singleQuote": true,
-  "trailingComma": "es5",
-  "tabWidth": 2,
-  "semi": true,
-  "printWidth": 80
-}
-```
-
-## 🚀 Deployment Guide
-
-### Environment Setup
-
-**Production Environment Variables:**
-
-```env
-# Database
-MONGO_URL=mongodb+srv://user:pass@cluster.mongodb.net/linkshort
-
-# Security
-JWT_SECRET=your-super-secure-random-string-here
-NODE_ENV=production
-
-# Server
-PORT=443
-DOMAIN=yourdomain.com
-SHORT_DOMAIN=https://yourdomain.com
-
-# Optional: Redis for caching
-REDIS_URL=redis://localhost:6379
-
-# Optional: Email service
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-```
-
-### Nginx Configuration
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com www.yourdomain.com;
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name yourdomain.com www.yourdomain.com;
-
-    ssl_certificate /etc/nginx/ssl/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
-
-    # Security headers
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-
-    # Gzip compression
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript;
-
-    location / {
-        proxy_pass http://app:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Static files caching
-    location /public {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-```
-
-### Monitoring & Logging
-
-**PM2 Configuration:**
-
-```json
-{
-  "apps": [
-    {
-      "name": "linkshort",
-      "script": "server.js",
-      "instances": "max",
-      "exec_mode": "cluster",
-      "env": {
-        "NODE_ENV": "production",
-        "PORT": 3000
-      },
-      "log_file": "logs/combined.log",
-      "out_file": "logs/out.log",
-      "error_file": "logs/error.log",
-      "log_date_format": "YYYY-MM-DD HH:mm Z"
-    }
-  ]
-}
-```
-
-**Winston Logging:**
-
-```javascript
-const winston = require("winston");
-
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: { service: "linkshort" },
-  transports: [
-    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
-    new winston.transports.File({ filename: "logs/combined.log" }),
-  ],
-});
-
-if (process.env.NODE_ENV !== "production") {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.simple(),
-    })
-  );
-}
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### 1. MongoDB Connection Issues
-
-**Problem:** `MongoServerError: Authentication failed`
-
-**Solution:**
-
-```javascript
-// Check connection string format
-MONGO_URL=mongodb://username:password@host:port/database
-
-// For MongoDB Atlas
-MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/database
-
-// Local MongoDB without auth
-MONGO_URL=mongodb://localhost:27017/linkshort
-```
-
-#### 2. JWT Token Issues
-
-**Problem:** `JsonWebTokenError: invalid signature`
-
-**Solution:**
-
-```bash
-# Generate a secure JWT secret
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-
-# Set in .env
-JWT_SECRET=your-generated-secret-here
-```
-
-#### 3. Port Already in Use
-
-**Problem:** `Error: listen EADDRINUSE: address already in use :::3000`
-
-**Solution:**
-
-```bash
-# Find process using port 3000
-lsof -ti:3000
-
-# Kill the process
-kill -9 $(lsof -ti:3000)
-
-# Or use different port
-PORT=3001 npm start
-```
-
-#### 4. Dark Mode Not Working
-
-**Problem:** Dark mode toggle doesn't work
-
-**Solution:**
-
-```javascript
-// Ensure Tailwind config includes darkMode
-tailwind.config = {
-  darkMode: "class", // This is required
-  // ... rest of config
-};
-
-// Check localStorage
-console.log(localStorage.getItem("darkMode"));
-
-// Manual toggle
-document.documentElement.classList.toggle("dark");
-```
-
-#### 5. Click Tracking Not Working
-
-**Problem:** Clicks not incrementing
-
-**Solution:**
-
-```javascript
-// Check database indexes
-db.urls.getIndexes();
-
-// Verify update operation
-await Url.findByIdAndUpdate(
-  url._id,
-  { $inc: { clicks: 1 } },
-  { new: true } // Return updated document
-);
-
-// Check for errors in logs
-console.log("Click increment result:", result);
+redis.on('connect', () => console.log('Redis connected'));
+redis.on('error', (err) => console.error('Redis error:', err));
+redis.on('ready', () => console.log('Redis ready'));
 ```
 
 ### Performance Issues
 
-#### 1. Slow Database Queries
+**Slow Response Times**:
+- Check MongoDB indexes: `db.urls.getIndexes()`
+- Enable Redis caching
+- Use MongoDB Atlas with nearby region
+- Add database connection pooling
+- Optimize queries (use `.lean()`)
 
-**Diagnosis:**
+**High Memory Usage**:
+- Limit query results (`.limit()`)
+- Use pagination
+- Clear expired URLs regularly
+- Monitor Redis memory usage
 
-```javascript
-// Enable MongoDB query logging
-mongoose.set("debug", true);
+### Security Audit
 
-// Profile slow queries
-db.setProfilingLevel(2, { slowms: 100 });
-db.system.profile.find().sort({ ts: -1 }).limit(5);
-```
-
-**Solutions:**
-
-```javascript
-// Add missing indexes
-UrlSchema.index({ user: 1, createdAt: -1 });
-
-// Use lean queries
-const urls = await Url.find({ user: userId }).lean();
-
-// Limit results
-const urls = await Url.find({ user: userId }).limit(50);
-```
-
-#### 2. Memory Leaks
-
-**Diagnosis:**
-
+**Run security check**:
 ```bash
-# Monitor memory usage
-node --inspect server.js
-
-# Use clinic.js
-npm install -g clinic
-clinic doctor -- node server.js
+npm audit
+npm audit fix
 ```
 
-**Solutions:**
-
-```javascript
-// Proper error handling
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
-});
-
-// Close database connections
-process.on("SIGINT", async () => {
-  await mongoose.connection.close();
-  process.exit(0);
-});
-```
-
-### Deployment Issues
-
-#### 1. SSL Certificate Problems
-
+**Update dependencies**:
 ```bash
-# Using Let's Encrypt
-sudo certbot --nginx -d yourdomain.com
-
-# Verify SSL
-openssl s_client -connect yourdomain.com:443
+npm outdated
+npm update
 ```
-
-## 📚 Additional Resources
-
-### Documentation Links
-
-- [Express.js Documentation](https://expressjs.com/)
-- [MongoDB Manual](https://docs.mongodb.com/)
-- [Mongoose Guide](https://mongoosejs.com/docs/guide.html)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [EJS Template Engine](https://ejs.co/)
-
-### Security Resources
-
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [Node.js Security Checklist](https://blog.risingstack.com/node-js-security-checklist/)
-- [JWT Best Practices](https://tools.ietf.org/html/rfc8725)
-
-### Performance Resources
-
-- [Node.js Performance Monitoring](https://nodejs.org/en/docs/guides/simple-profiling/)
-- [MongoDB Performance Best Practices](https://docs.mongodb.com/manual/administration/production-notes/)
 
 ---
 
-**This documentation is maintained alongside the project. For updates and contributions, please refer to the main repository.**
+## Contributing
+
+### Development Guidelines
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature-name`
+3. Write tests for new features
+4. Ensure tests pass: `npm test`
+5. Follow code style (consider adding ESLint)
+6. Commit with clear messages
+7. Push to branch: `git push origin feature-name`
+8. Create Pull Request
+
+### Code Style
+
+- Use 2-space indentation
+- Use semicolons
+- Use camelCase for variables
+- Use PascalCase for models
+- Add comments for complex logic
+- Keep functions small and focused
+
+---
+
+## License
+
+This project is open-source. See LICENSE file for details.
+
+---
+
+## Support
+
+For issues, questions, or contributions:
+- GitHub Issues: https://github.com/anuj2301/BEE/issues
+- Pull Requests: https://github.com/anuj2301/BEE/pulls
+- Email: (add if available)
+
+---
+
+**Last Updated**: November 24, 2025
+**Version**: 1.0.0
+**Maintainer**: anuj2301

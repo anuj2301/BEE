@@ -231,7 +231,7 @@
                     </button>
 
                     <!-- Delete Button -->
-                    <form action="/delete/<%= url._id %>" method="POST" style="display:inline" onsubmit="return confirmDelete()">
+                    <form action="/delete/<%= url._id %>" method="POST" style="display:inline" onsubmit="return handleDeleteLink(event)">
                       <button 
                         type="submit" 
                         class="bg-secondary dark:bg-red-800 hover:bg-red-600 dark:hover:bg-red-900 text-white px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:shadow-md dark:shadow-glow-red flex items-center space-x-1"
@@ -323,8 +323,73 @@
   </div>
 </div>
 
-<!-- JavaScript for interactions -->
+<!-- JavaScript for interactions and localStorage caching -->
 <script>
+  // Browser caching using localStorage
+  const CACHE_KEY = 'dashboard_urls_cache';
+  const CACHE_TIMESTAMP_KEY = 'dashboard_cache_timestamp';
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  // Save current URLs to localStorage
+  function cacheUrlsToLocalStorage() {
+    try {
+      const urls = <%= JSON.stringify(urls) %>;
+      localStorage.setItem(CACHE_KEY, JSON.stringify(urls));
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+      console.log('Dashboard data cached to localStorage');
+    } catch (e) {
+      console.error('Failed to cache to localStorage:', e);
+    }
+  }
+
+  // Load URLs from localStorage if available and fresh
+  function loadUrlsFromCache() {
+    try {
+      const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+      if (!timestamp) return null;
+      
+      const age = Date.now() - parseInt(timestamp);
+      if (age > CACHE_DURATION) {
+        // Cache expired
+        localStorage.removeItem(CACHE_KEY);
+        localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+        return null;
+      }
+      
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      console.error('Failed to load from localStorage:', e);
+      return null;
+    }
+  }
+
+  // Check Redis status
+  async function checkRedisStatus() {
+    try {
+      const response = await fetch('/api/redis-status');
+      const data = await response.json();
+      
+      if (data.enabled && data.connected) {
+        console.log('Redis Cache Status:', data.stats);
+      }
+    } catch (e) {
+      console.error('Failed to check Redis status:', e);
+    }
+  }
+
+  // Initialize caching on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    cacheUrlsToLocalStorage();
+    checkRedisStatus();
+    
+    // Display cache info in console
+    const cached = loadUrlsFromCache();
+    if (cached) {
+      console.log('localStorage cache available with', cached.length, 'URLs');
+    }
+  });
+
   function copyToClipboard(text, button) {
     navigator.clipboard.writeText(text).then(function() {
       // Change button appearance temporarily
@@ -350,7 +415,24 @@
   }
 
   function confirmDelete() {
-    return confirm('Are you sure you want to delete this link? This action cannot be undone.');
+    // Clear cache on delete
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+  }
+
+  async function handleDeleteLink(event) {
+    event.preventDefault();
+    const confirmed = await showConfirmModal(
+      'Are you sure you want to delete this link? This action cannot be undone.',
+      'Delete Link',
+      'Delete',
+      'red'
+    );
+    if (confirmed) {
+      confirmDelete();
+      event.target.submit();
+    }
+    return false;
   }
 </script>
 
