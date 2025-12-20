@@ -1,0 +1,39 @@
+services:
+  # Web Service
+  - type: web
+    name: linkshort-api
+    runtime: node
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: linkshort-redis
+          property: connectionString
+      - key: ENABLE_REDIS
+        value: true
+      - key: ENABLE_HTTPS
+        value: false
+
+  # Redis Service
+  - type: redis
+    name: linkshort-redis
+    region: oregon
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
