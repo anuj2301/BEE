@@ -28,10 +28,15 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// DB connection
+// MongoDB Atlas connection
 mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB connected"));
+  .connect(process.env.MONGO_URL, {
+    dbName: 'linksnap',
+    retryWrites: true,
+    w: 'majority'
+  })
+  .then(() => console.log("✓ MongoDB Atlas connected"))
+  .catch((err) => console.error("MongoDB Atlas connection error:", err));
 
 // Middleware
 app.set("view engine", "ejs");
