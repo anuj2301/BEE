@@ -1,24 +1,28 @@
-// Redis client configuration
+// Redis client configuration for Upstash
 const Redis = require('ioredis');
 
-// Create Redis client
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
+// Create Redis client with Upstash Cloud Redis
+// Use REDIS_URL for Upstash connection string
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+  family: 0, // Use IPv4 and IPv6
+  tls: process.env.REDIS_URL ? {
+    rejectUnauthorized: false
+  } : undefined,
   retryStrategy(times) {
     const delay = Math.min(times * 50, 2000);
     return delay;
   },
   maxRetriesPerRequest: 3,
+  enableOfflineQueue: false,
+  connectTimeout: 10000,
 });
 
 redis.on('connect', () => {
-  console.log('✓ Redis connected');
+  console.log('✓ Upstash Redis connected');
 });
 
 redis.on('error', (err) => {
-  console.log('Redis connection error:', err.message);
+  console.log('Upstash Redis connection error:', err.message);
 });
 
 // Session management helper functions
